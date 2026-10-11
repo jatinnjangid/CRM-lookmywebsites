@@ -428,7 +428,7 @@ export function AddBookingModal({ open, onOpenChange, onSave, defaultCustomer, e
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto rounded-2xl border border-border p-0 shadow-2xl bg-card">
         <div className="sticky top-0 z-10 bg-card border-b border-border p-6 pb-4 flex items-start justify-between">
-          <DialogHeader>
+          <DialogHeader className="pr-8">
             <DialogTitle className="font-display text-xl font-bold flex items-center gap-2">
               {editingBooking ? "Edit Booking" : (bookingType ? `New ${bookingType} Booking` : "Add New Booking")}
             </DialogTitle>
@@ -436,14 +436,6 @@ export function AddBookingModal({ open, onOpenChange, onSave, defaultCustomer, e
               {bookingType ? "Fill in the details below." : "Select a booking type to continue."}
             </DialogDescription>
           </DialogHeader>
-          <button
-            type="button"
-            onClick={() => onOpenChange(false)}
-            className="rounded-full p-2 hover:bg-secondary transition-colors -mt-2 -mr-2"
-          >
-            <X className="h-5 w-5 text-muted-foreground" />
-            <span className="sr-only">Close</span>
-          </button>
         </div>
 
         {bookingType && (
