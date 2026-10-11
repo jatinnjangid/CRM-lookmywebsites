@@ -1,3 +1,4 @@
+import { useState, useMemo } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   BarChart,
@@ -14,7 +15,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { IndianRupee, TrendingUp, UserCheck, CalendarCheck, Star, Download, ArrowLeft } from "lucide-react";
+import { IndianRupee, TrendingUp, UserCheck, CalendarCheck, Star, Download, ArrowLeft, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatINR } from "@/lib/mock-data";
 import { useSupabaseTable } from "@/hooks/useSupabaseTable";
@@ -80,6 +81,81 @@ function SectionHeader({ title, sub }: { title: string; sub: string }) {
   );
 }
 
+const ReportsRevenueTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    const rev = payload.find((p: any) => p.dataKey === "revenue")?.value ?? 0;
+    const bkg = payload.find((p: any) => p.dataKey === "bookings")?.value ?? 0;
+    return (
+      <div className="rounded-xl border border-border/80 bg-popover/95 backdrop-blur-md px-4 py-3 shadow-xl min-w-[170px] text-xs pointer-events-none space-y-2">
+        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider pb-1 border-b border-border/60">
+          {label} Overview
+        </p>
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between gap-3">
+            <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <span className="h-2 w-2 rounded-full bg-primary shrink-0 ring-2 ring-primary/20" />
+              Revenue:
+            </span>
+            <span className="font-bold text-foreground font-display">₹{rev} Lakhs</span>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <span className="h-2 w-2 rounded-full bg-indigo-500 shrink-0 ring-2 ring-indigo-500/20" />
+              Bookings:
+            </span>
+            <span className="font-bold text-foreground">{bkg} Total</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
+const ReportsDestinationTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload.length) {
+    const item = payload[0];
+    return (
+      <div className="rounded-xl border border-border/80 bg-popover/95 backdrop-blur-md px-4 py-2.5 shadow-xl min-w-[140px] text-xs pointer-events-none">
+        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+          {item.payload?.dest}
+        </p>
+        <div className="flex items-center gap-2">
+          <span
+            className="h-2.5 w-2.5 rounded-full shrink-0 ring-2 ring-border/40"
+            style={{ backgroundColor: item.payload?.fill || "var(--primary)" }}
+          />
+          <span className="text-xs font-medium text-muted-foreground">Revenue:</span>
+          <span className="text-sm font-bold text-foreground ml-auto">₹{item.value} Lakhs</span>
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
+const ReportsSourceTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload.length) {
+    const item = payload[0];
+    return (
+      <div className="rounded-xl border border-border/80 bg-popover/95 backdrop-blur-md px-4 py-2.5 shadow-xl min-w-[130px] text-xs pointer-events-none">
+        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+          {item.name}
+        </p>
+        <div className="flex items-center gap-2">
+          <span
+            className="h-2.5 w-2.5 rounded-full shrink-0 ring-2 ring-border/40"
+            style={{ backgroundColor: item.payload?.fill || "var(--primary)" }}
+          />
+          <span className="text-xs font-medium text-muted-foreground">Share:</span>
+          <span className="text-sm font-bold text-foreground ml-auto">{item.value}%</span>
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
 function ReportsPage() {
   const navigate = useNavigate();
   const auth = getAuth();
@@ -87,6 +163,19 @@ function ReportsPage() {
   const [leadsList] = useSupabaseTable<any[]>("leads", []);
   const [bookingsList] = useSupabaseTable<any[]>("bookings", []);
   const [employeesList] = useSupabaseTable<any[]>("employees", INITIAL_EMPLOYEES);
+
+  const [leaderboardPeriod, setLeaderboardPeriod] = useState<string>("all");
+
+  const availableMonths = useMemo(() => {
+    const set = new Set<string>();
+    bookingsList.forEach((b) => {
+      const d = b.bookingDate || b.created_at;
+      if (d && typeof d === "string" && d.length >= 7) {
+        set.add(d.slice(0, 7));
+      }
+    });
+    return Array.from(set).sort().reverse();
+  }, [bookingsList]);
 
   const totalRevenue = bookingsList.reduce((s, b) => s + (b.paid || 0), 0);
   const pendingAmount = bookingsList.reduce((s, b) => s + ((b.amount || 0) - (b.paid || 0)), 0);
@@ -166,46 +255,139 @@ function ReportsPage() {
     }))
     .sort((a, b) => b.value - a.value);
 
-  // Compute leaderboard
-  const consultantMap = new Map();
-  
   // Helper to normalize names against actual employee records
   const getNormalizedName = (rawName: string) => {
     if (!rawName) return "Unknown";
-    const matched = employeesList.find(
-      (e) => e.name && e.name.toLowerCase().trim() === rawName.toLowerCase().trim()
+    const raw = rawName.trim().toLowerCase();
+    if (!raw) return "Unknown";
+
+    // 1. Direct aliases & common typos in bookings/leads
+    if (raw === "deeapk" || raw.startsWith("deepak")) {
+      const found = employeesList.find((e) => e.name && e.name.toLowerCase().includes("deepak"));
+      if (found) return found.name.trim();
+    }
+    if (raw.startsWith("pushp")) {
+      const found = employeesList.find((e) => e.name && e.name.toLowerCase().includes("pushp"));
+      if (found) return found.name.trim();
+    }
+    if (raw.startsWith("manvendr")) {
+      const found = employeesList.find((e) => e.name && e.name.toLowerCase().includes("manvendr"));
+      if (found) return found.name.trim();
+    }
+    if (raw.startsWith("nikita")) {
+      const found = employeesList.find((e) => e.name && e.name.toLowerCase().includes("nikita"));
+      if (found) return found.name.trim();
+    }
+    if (raw.startsWith("bhavya")) {
+      const found = employeesList.find((e) => e.name && e.name.toLowerCase().includes("bhavya"));
+      if (found) return found.name.trim();
+    }
+    if (raw.startsWith("suman")) {
+      const found = employeesList.find((e) => e.name && e.name.toLowerCase().includes("suman"));
+      if (found) return found.name.trim();
+    }
+    if (raw.startsWith("aman")) {
+      const found = employeesList.find((e) => e.name && e.name.toLowerCase().includes("aman"));
+      if (found) return found.name.trim();
+    }
+    if (raw.startsWith("jatin")) {
+      const found = employeesList.find((e) => e.name && e.name.toLowerCase().includes("jatin"));
+      if (found) return found.name.trim();
+    }
+    if (raw.startsWith("kamal")) {
+      const found = employeesList.find((e) => e.name && e.name.toLowerCase().includes("kamal"));
+      if (found) return found.name.trim();
+    }
+    if (raw.startsWith("jhone") || raw.startsWith("john")) {
+      const found = employeesList.find((e) => e.name && (e.name.toLowerCase().includes("jhone") || e.name.toLowerCase().includes("john")));
+      if (found) return found.name.trim();
+    }
+
+    // 2. Exact match (case-insensitive, trimmed)
+    const exact = employeesList.find(
+      (e) => e.name && e.name.toLowerCase().trim() === raw
     );
-    return matched ? matched.name : rawName.trim();
+    if (exact) return exact.name.trim();
+
+    // 3. First-name or substring match
+    const firstWord = raw.split(/\s+/)[0];
+    const byFirstWord = employeesList.find((e) => {
+      if (!e.name) return false;
+      const eNorm = e.name.toLowerCase().trim();
+      const eFirst = eNorm.split(/\s+/)[0];
+      return eFirst === firstWord || eNorm.includes(raw) || raw.includes(eNorm);
+    });
+    if (byFirstWord) return byFirstWord.name.trim();
+
+    return rawName.trim();
   };
 
-  // Initialize map with all employees
-  employeesList.forEach((e) => {
-    if (e.name) {
-      consultantMap.set(e.name, { deals: 0, revenue: 0, leads: 0 });
+  const isMatchPeriod = (dateStr?: string) => {
+    if (!dateStr || typeof dateStr !== "string") return false;
+    if (leaderboardPeriod === "all") return true;
+    const targetPrefix = leaderboardPeriod === "month"
+      ? new Date().toISOString().slice(0, 7) // e.g. "2026-10"
+      : leaderboardPeriod;
+    return dateStr.startsWith(targetPrefix);
+  };
+
+  const currentMonthLabel = new Date().toLocaleString("default", { month: "long", year: "numeric" });
+  const leaderboardSubtitle =
+    leaderboardPeriod === "month"
+      ? `Ranked by revenue generated — ${currentMonthLabel}`
+      : leaderboardPeriod === "all"
+        ? "Ranked by revenue generated — All Time"
+        : `Ranked by revenue generated — ${
+            leaderboardPeriod.includes("-")
+              ? new Date(
+                  Number(leaderboardPeriod.split("-")[0]),
+                  Number(leaderboardPeriod.split("-")[1]) - 1,
+                  1
+                ).toLocaleString("default", { month: "long", year: "numeric" })
+              : leaderboardPeriod
+          }`;
+
+  // Filter bookings and leads according to period
+  const filteredBookings = bookingsList.filter((b) => {
+    const d = b.bookingDate || b.created_at || b.createdAt;
+    return isMatchPeriod(d);
+  });
+
+  const filteredLeads = leadsList.filter((l) => {
+    const d = l.createdAt || l.created_at;
+    return isMatchPeriod(d);
+  });
+
+  // Compute leaderboard
+  const consultantMap = new Map<string, { deals: number; revenue: number; leads: number }>();
+
+  filteredBookings.forEach((b) => {
+    const c = getNormalizedName(b.bookedBy || "Unknown");
+    if (c === "Unknown") return;
+    if (!consultantMap.has(c)) {
+      consultantMap.set(c, { deals: 0, revenue: 0, leads: 0 });
+    }
+    const item = consultantMap.get(c)!;
+    item.deals += 1;
+    item.revenue += b.amount || 0;
+  });
+
+  filteredLeads.forEach((l) => {
+    const c = l.assignedTo ? getNormalizedName(l.assignedTo) : null;
+    if (c && c !== "Unknown") {
+      if (!consultantMap.has(c)) {
+        consultantMap.set(c, { deals: 0, revenue: 0, leads: 0 });
+      }
+      consultantMap.get(c)!.leads += 1;
     }
   });
 
-  bookingsList.forEach((b) => {
-    const c = getNormalizedName(b.bookedBy || "Unknown");
-    if (!consultantMap.has(c)) consultantMap.set(c, { deals: 0, revenue: 0, leads: 0 });
-    consultantMap.get(c).deals += 1;
-    consultantMap.get(c).revenue += b.amount || 0;
-  });
-  
-  leadsList.forEach((l) => {
-    const c = l.assignedTo ? getNormalizedName(l.assignedTo) : null;
-    if (c) {
-      if (!consultantMap.has(c)) consultantMap.set(c, { deals: 0, revenue: 0, leads: 0 });
-      consultantMap.get(c).leads += 1;
-    }
-  });
-  
   const leaderboard = Array.from(consultantMap.entries())
-    // Only include actual employees who exist in the employees list
-    .filter(([name]) => employeesList.some((e) => e.name === name))
+    // Only include actual employees who have closed deals or revenue
+    .filter(([name, data]) => (data.deals > 0 || data.revenue > 0) && employeesList.some((e) => e.name.trim().toLowerCase() === name.trim().toLowerCase()))
     .map(([name, data]) => {
-      const conversion = data.leads ? Math.round((data.deals / data.leads) * 100) : 0;
-      const emp = employeesList.find((e) => e.name === name);
+      const conversion = data.leads ? Math.min(100, Math.round((data.deals / data.leads) * 100)) : (data.deals > 0 ? 100 : 0);
+      const emp = employeesList.find((e) => e.name.trim().toLowerCase() === name.trim().toLowerCase());
       const initials = name.split(' ').map((n: string) => n[0]).join('').toUpperCase().substring(0, 2) || "?";
       return {
         name,
@@ -216,7 +398,7 @@ function ReportsPage() {
         conversion,
       };
     })
-    .sort((a, b) => b.revenue - a.revenue); // Show all instead of top 5
+    .sort((a, b) => b.revenue - a.revenue);
 
   return (
     <div className="space-y-8">
@@ -287,12 +469,16 @@ function ReportsPage() {
         <div className="mt-4 h-72">
           <ResponsiveContainer>
             <LineChart data={revenueByMonth}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-              <YAxis yAxisId="left" tick={{ fontSize: 12 }} />
-              <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12 }} />
-              <Tooltip />
-              <Legend />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border)/0.5)" />
+              <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#888" tickLine={false} axisLine={false} />
+              <YAxis yAxisId="left" tick={{ fontSize: 12 }} stroke="#888" tickLine={false} axisLine={false} />
+              <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12 }} stroke="#888" tickLine={false} axisLine={false} />
+              <Tooltip
+                content={<ReportsRevenueTooltip />}
+                wrapperStyle={{ outline: "none", zIndex: 50 }}
+                cursor={{ stroke: "var(--primary)", strokeWidth: 1.5, strokeDasharray: "4 4" }}
+              />
+              <Legend verticalAlign="bottom" wrapperStyle={{ paddingTop: "12px", fontSize: "11px" }} />
               <Line
                 yAxisId="left"
                 type="monotone"
@@ -300,7 +486,8 @@ function ReportsPage() {
                 name="Revenue (₹L)"
                 stroke="var(--primary)"
                 strokeWidth={3}
-                dot={{ r: 5 }}
+                dot={{ r: 5, fill: "var(--primary)", strokeWidth: 2 }}
+                activeDot={{ r: 7, strokeWidth: 2, stroke: "#fff" }}
               />
               <Line
                 yAxisId="right"
@@ -308,9 +495,10 @@ function ReportsPage() {
                 dataKey="bookings"
                 name="Bookings"
                 stroke="#6366f1"
-                strokeWidth={2}
-                dot={{ r: 4 }}
+                strokeWidth={2.5}
+                dot={{ r: 4, fill: "#6366f1" }}
                 strokeDasharray="5 5"
+                activeDot={{ r: 6, strokeWidth: 2, stroke: "#fff" }}
               />
             </LineChart>
           </ResponsiveContainer>
@@ -324,10 +512,14 @@ function ReportsPage() {
           <div className="mt-4 h-64">
             <ResponsiveContainer>
               <BarChart data={destData} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis type="number" tick={{ fontSize: 11 }} />
-                <YAxis dataKey="dest" type="category" tick={{ fontSize: 12 }} width={72} />
-                <Tooltip formatter={(v) => [`₹${v}L`, "Revenue"]} />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border)/0.5)" />
+                <XAxis type="number" tick={{ fontSize: 11 }} stroke="#888" tickLine={false} axisLine={false} />
+                <YAxis dataKey="dest" type="category" tick={{ fontSize: 12 }} width={72} stroke="#888" tickLine={false} axisLine={false} />
+                <Tooltip
+                  content={<ReportsDestinationTooltip />}
+                  wrapperStyle={{ outline: "none", zIndex: 50 }}
+                  cursor={{ fill: "rgba(0, 0, 0, 0.04)" }}
+                />
                 <Bar dataKey="revenue" radius={[0, 8, 8, 0]}>
                   {destData.map((_, i) => (
                     <Cell key={i} fill={COLORS[i % COLORS.length]} />
@@ -358,7 +550,10 @@ function ReportsPage() {
                       <Cell key={i} fill={SOURCE_COLORS[i % SOURCE_COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip />
+                  <Tooltip
+                    content={<ReportsSourceTooltip />}
+                    wrapperStyle={{ outline: "none", zIndex: 50 }}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -379,77 +574,162 @@ function ReportsPage() {
       </div>
 
       {/* Consultant leaderboard */}
-      <div className="rounded-2xl border border-border bg-card shadow-card">
-        <div className="border-b border-border px-6 py-4">
-          <h2 className="font-display text-lg font-bold">Consultant Leaderboard</h2>
-          <p className="text-sm text-muted-foreground">
-            Ranked by revenue generated — current year
-          </p>
-        </div>
-        <div className="divide-y divide-border">
-          {leaderboard.map((c, i) => (
-            <div
-              key={c.name}
-              className="flex items-center gap-4 px-6 py-4 hover:bg-secondary/30 transition-colors"
-            >
-              {/* Rank */}
-              <span
-                className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl font-display text-xs font-bold border ${
-                  i === 0
-                    ? "bg-amber-500/10 text-amber-600 border-amber-500/20 dark:bg-amber-950/40 dark:text-amber-400"
-                    : i === 1
-                      ? "bg-slate-500/10 text-slate-600 border-slate-500/20 dark:bg-slate-800 dark:text-slate-300"
-                      : i === 2
-                        ? "bg-amber-700/10 text-amber-700 border-amber-700/20 dark:bg-amber-950/30 dark:text-amber-500"
-                        : "bg-secondary/60 text-muted-foreground border-border/50"
+      <div className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
+        <div className="border-b border-border px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 className="font-display text-lg font-bold">Consultant Leaderboard</h2>
+            <p className="text-sm text-muted-foreground">
+              {leaderboardSubtitle}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-1 bg-secondary/50 p-1 rounded-xl border border-border">
+              <button
+                type="button"
+                onClick={() => setLeaderboardPeriod("month")}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                  leaderboardPeriod === "month"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                #{i + 1}
-              </span>
-
-              {/* Themed Avatar */}
-              {c.avatar ? (
-                <img
-                  src={c.avatar}
-                  alt={c.name}
-                  className="h-10 w-10 rounded-full object-cover border border-border shadow-sm"
-                />
-              ) : (
-                <div className="h-10 w-10 rounded-full bg-primary/10 border border-primary/25 flex items-center justify-center font-bold text-primary text-sm shadow-sm">
-                  {c.initials}
-                </div>
-              )}
-              <div className="flex-1">
-                <p className="font-semibold">{c.name}</p>
-                <p className="text-xs text-muted-foreground">{c.deals} deals closed</p>
-              </div>
-              {/* Conversion */}
-              <div className="hidden text-center sm:block">
-                <p className="font-semibold">{c.conversion}%</p>
-                <p className="text-xs text-muted-foreground">Conversion</p>
-              </div>
-              {/* Revenue */}
-              <div className="text-right">
-                <p className="font-display text-lg font-bold text-primary">
-                  {formatINR(c.revenue)}
-                </p>
-                <p className="text-xs text-muted-foreground">Revenue</p>
-              </div>
-              {/* Mini bar */}
-              <div className="hidden w-24 sm:block">
-                <div className="h-1.5 w-full overflow-hidden rounded-full bg-border">
-                  <div
-                    className="h-full rounded-full"
-                    style={{
-                      width: leaderboard.length > 0 && leaderboard[0].revenue > 0 ? `${Math.round((c.revenue / leaderboard[0].revenue) * 100)}%` : '0%',
-                      background: "var(--gradient-brand)",
-                    }}
-                  />
-                </div>
-              </div>
+                This Month
+              </button>
+              <button
+                type="button"
+                onClick={() => setLeaderboardPeriod("all")}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                  leaderboardPeriod === "all"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                All Time
+              </button>
             </div>
-          ))}
+            {availableMonths.length > 0 && (
+              <select
+                value={leaderboardPeriod.startsWith("20") ? leaderboardPeriod : ""}
+                onChange={(e) => {
+                  if (e.target.value) setLeaderboardPeriod(e.target.value);
+                }}
+                className="text-xs bg-card border border-border rounded-xl px-2.5 py-1.5 text-muted-foreground hover:text-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-sm"
+              >
+                <option value="" disabled>Past Months...</option>
+                {availableMonths.map((m) => {
+                  const [year, month] = m.split("-");
+                  const date = new Date(Number(year), Number(month) - 1, 1);
+                  const label = date.toLocaleString("default", { month: "short", year: "numeric" });
+                  return (
+                    <option key={m} value={m}>
+                      {label}
+                    </option>
+                  );
+                })}
+              </select>
+            )}
+          </div>
         </div>
+
+        {leaderboard.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary mb-3">
+              <Trophy className="h-6 w-6" />
+            </div>
+            <p className="font-semibold text-foreground text-sm">
+              {leaderboardPeriod === "month"
+                ? `No deals closed in ${currentMonthLabel} yet`
+                : "No consultant deals recorded for this period"}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground max-w-sm">
+              Inactive employees with 0 deals are filtered out. You can switch to All Time or view previous months to see performance rankings.
+            </p>
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => setLeaderboardPeriod("all")}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-primary/30 bg-primary/10 px-3.5 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20 transition-colors"
+              >
+                View All Time Leaderboard
+              </button>
+              {availableMonths.length > 0 && availableMonths[0] !== new Date().toISOString().slice(0, 7) && (
+                <button
+                  type="button"
+                  onClick={() => setLeaderboardPeriod(availableMonths[0])}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-secondary/50 px-3.5 py-1.5 text-xs font-semibold text-foreground hover:bg-secondary transition-colors"
+                >
+                  View {new Date(Number(availableMonths[0].split("-")[0]), Number(availableMonths[0].split("-")[1]) - 1, 1).toLocaleString("default", { month: "short", year: "numeric" })}
+                </button>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="divide-y divide-border">
+            {leaderboard.map((c, i) => (
+              <div
+                key={c.name}
+                className="flex items-center gap-4 px-6 py-4 hover:bg-secondary/30 transition-colors"
+              >
+                {/* Rank */}
+                <span
+                  className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl font-display text-xs font-bold border ${
+                    i === 0
+                      ? "bg-amber-500/10 text-amber-600 border-amber-500/20 dark:bg-amber-950/40 dark:text-amber-400"
+                      : i === 1
+                        ? "bg-slate-500/10 text-slate-600 border-slate-500/20 dark:bg-slate-800 dark:text-slate-300"
+                        : i === 2
+                          ? "bg-amber-700/10 text-amber-700 border-amber-700/20 dark:bg-amber-950/30 dark:text-amber-500"
+                          : "bg-secondary/60 text-muted-foreground border-border/50"
+                  }`}
+                >
+                  {i + 1}
+                </span>
+
+                {/* Themed Avatar */}
+                {c.avatar ? (
+                  <img
+                    src={c.avatar}
+                    alt={c.name}
+                    className="h-10 w-10 rounded-full object-cover border border-border shadow-sm"
+                  />
+                ) : (
+                  <div className="h-10 w-10 rounded-full bg-primary/10 border border-primary/25 flex items-center justify-center font-bold text-primary text-sm shadow-sm">
+                    {c.initials}
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold truncate">{c.name}</p>
+                  <p className="text-xs text-muted-foreground">{c.deals} {c.deals === 1 ? "deal" : "deals"} closed</p>
+                </div>
+                {/* Conversion */}
+                <div className="hidden text-center sm:block">
+                  <p className="font-semibold">{c.conversion}%</p>
+                  <p className="text-xs text-muted-foreground">Conversion</p>
+                </div>
+                {/* Revenue */}
+                <div className="text-right">
+                  <p className="font-display text-lg font-bold text-primary">
+                    {formatINR(c.revenue)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Revenue</p>
+                </div>
+                {/* Mini bar */}
+                <div className="hidden w-24 sm:block">
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-border">
+                    <div
+                      className="h-full rounded-full"
+                      style={{
+                        width: leaderboard.length > 0 && leaderboard[0].revenue > 0 ? `${Math.round((c.revenue / leaderboard[0].revenue) * 100)}%` : '0%',
+                        background: "var(--gradient-brand)",
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Lead pipeline table */}

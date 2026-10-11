@@ -33,6 +33,7 @@ import { Badge } from "@/components/ui/badge";
 import { INITIAL_EMPLOYEES } from "./crm.employees";
 import { Label } from "@/components/ui/label";
 import { EmployeeProfileCard } from "@/components/EmployeeProfileCard";
+import { getStoredPreferences, saveStoredPreferences, DEFAULT_PREFERENCES, type NotificationPreferences } from "@/lib/notifications";
 
 export const Route = createFileRoute("/crm/settings")({ component: SettingsPage });
 
@@ -318,27 +319,11 @@ function SettingsPage() {
   }, [appearance]);
 
   // ── Notifications state ─────────────────────────────────────────
-  const notifications =
-    settings.find((s) => s.id === "notifications")?.data || defaultNotifications;
-  const setNotifications = (newVal: any) => {
-    setSettings((prev: any[]) => {
-      const exists = prev.find((s) => s.id === "notifications");
-      if (exists) {
-        return prev.map((s) =>
-          s.id === "notifications"
-            ? { ...s, data: typeof newVal === "function" ? newVal(s.data) : newVal }
-            : s,
-        );
-      }
-      return [
-        ...prev,
-        {
-          id: "notifications",
-          type: "notifications",
-          data: typeof newVal === "function" ? newVal(defaultNotifications) : newVal,
-        },
-      ];
-    });
+  const [notifPreferences, setNotifPreferences] = useState<NotificationPreferences>(() => getStoredPreferences());
+
+  const handleUpdatePreferences = (updated: NotificationPreferences) => {
+    setNotifPreferences(updated);
+    saveStoredPreferences(updated);
   };
 
   // ── Security state ──────────────────────────────────────────────
@@ -915,32 +900,32 @@ function SettingsPage() {
                 <ToggleRow
                   label="Lead Assigned to Me"
                   sub="Get notified when a lead is assigned"
-                  checked={notifications.leadAssigned}
-                  onChange={(v) => setNotifications({ ...notifications, leadAssigned: v })}
+                  checked={notifPreferences.leadAssigned}
+                  onChange={(v) => handleUpdatePreferences({ ...notifPreferences, leadAssigned: v })}
                 />
                 <ToggleRow
                   label="Task Due Reminder"
                   sub="Remind 24h before task deadline"
-                  checked={notifications.taskDue}
-                  onChange={(v) => setNotifications({ ...notifications, taskDue: v })}
+                  checked={notifPreferences.taskDue}
+                  onChange={(v) => handleUpdatePreferences({ ...notifPreferences, taskDue: v })}
                 />
                 <ToggleRow
                   label="Booking Confirmed"
                   sub="Alert when a new booking is confirmed"
-                  checked={notifications.bookingConfirmed}
-                  onChange={(v) => setNotifications({ ...notifications, bookingConfirmed: v })}
+                  checked={notifPreferences.bookingConfirmed}
+                  onChange={(v) => handleUpdatePreferences({ ...notifPreferences, bookingConfirmed: v })}
                 />
                 <ToggleRow
                   label="Leave Requested"
                   sub="Notify when an employee requests leave"
-                  checked={notifications.leaveRequested}
-                  onChange={(v) => setNotifications({ ...notifications, leaveRequested: v })}
+                  checked={notifPreferences.leaveRequested}
+                  onChange={(v) => handleUpdatePreferences({ ...notifPreferences, leaveRequested: v })}
                 />
                 <ToggleRow
                   label="System Updates"
                   sub="CRM feature updates and announcements"
-                  checked={notifications.systemUpdates}
-                  onChange={(v) => setNotifications({ ...notifications, systemUpdates: v })}
+                  checked={notifPreferences.systemUpdates}
+                  onChange={(v) => handleUpdatePreferences({ ...notifPreferences, systemUpdates: v })}
                 />
               </div>
             </SectionCard>
@@ -950,14 +935,14 @@ function SettingsPage() {
                 <ToggleRow
                   label="Email Digest"
                   sub="Receive daily summary via email"
-                  checked={notifications.emailDigest}
-                  onChange={(v) => setNotifications({ ...notifications, emailDigest: v })}
+                  checked={notifPreferences.emailDigest}
+                  onChange={(v) => handleUpdatePreferences({ ...notifPreferences, emailDigest: v })}
                 />
                 <ToggleRow
                   label="WhatsApp Alerts"
                   sub="Get critical alerts on WhatsApp"
-                  checked={notifications.whatsapp}
-                  onChange={(v) => setNotifications({ ...notifications, whatsapp: v })}
+                  checked={notifPreferences.whatsapp}
+                  onChange={(v) => handleUpdatePreferences({ ...notifPreferences, whatsapp: v })}
                 />
               </div>
             </SectionCard>
@@ -967,15 +952,7 @@ function SettingsPage() {
                 variant="outline"
                 className="rounded-xl"
                 onClick={() => {
-                  setNotifications({
-                    leadAssigned: true,
-                    taskDue: true,
-                    bookingConfirmed: true,
-                    leaveRequested: true,
-                    systemUpdates: false,
-                    emailDigest: true,
-                    whatsapp: false,
-                  });
+                  handleUpdatePreferences(DEFAULT_PREFERENCES);
                   showToast("Notifications reset to defaults.");
                 }}
               >
@@ -983,7 +960,10 @@ function SettingsPage() {
               </Button>
               <Button
                 className="btn-hero gap-2 rounded-xl"
-                onClick={() => showToast("✅ Notification preferences saved!")}
+                onClick={() => {
+                  saveStoredPreferences(notifPreferences);
+                  showToast("✅ Notification preferences saved!");
+                }}
               >
                 <Save className="h-4 w-4" /> Save Preferences
               </Button>

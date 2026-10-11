@@ -99,27 +99,105 @@ const AVATARS = ["", "", "", "", "", "", ""];
 
 const LEADS_INIT: any[] = [];
 
-// Custom Recharts tooltip components for visual excellence
+// Custom Recharts tooltip components with crisp, modern shape & shadow
 const RevenueTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="rounded-xl border border-border bg-card p-3 shadow-premium text-xs">
-        <p className="font-bold text-muted-foreground mb-1">{label}</p>
-        <p className="font-display text-sm font-extrabold text-primary">
-          ₹{payload[0].value} Lakhs
+      <div className="rounded-xl border border-border/80 bg-popover/95 backdrop-blur-md px-4 py-2.5 shadow-xl min-w-[130px] text-xs pointer-events-none">
+        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+          {label}
         </p>
+        <div className="flex items-center gap-2">
+          <span className="h-2 w-2 rounded-full bg-primary shrink-0 ring-2 ring-primary/20" />
+          <p className="font-display text-sm font-bold text-foreground">
+            ₹{payload[0].value} <span className="text-xs font-semibold text-muted-foreground">Lakhs</span>
+          </p>
+        </div>
       </div>
     );
   }
   return null;
 };
 
-const FunnelTooltip = ({ active, payload, label }: any) => {
+const SourceTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload.length) {
+    const item = payload[0];
+    return (
+      <div className="rounded-xl border border-border/80 bg-popover/95 backdrop-blur-md px-4 py-2.5 shadow-xl min-w-[130px] text-xs pointer-events-none">
+        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+          Lead Channel
+        </p>
+        <div className="flex items-center gap-2">
+          <span
+            className="h-2 w-2 rounded-full shrink-0 ring-2 ring-border/40"
+            style={{ backgroundColor: item.payload?.fill || "var(--primary)" }}
+          />
+          <span className="text-xs font-medium text-foreground">{item.name}:</span>
+          <span className="text-xs font-bold text-primary ml-auto">{item.value}</span>
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
+const DestinationTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload.length) {
+    const item = payload[0];
+    const valInLakhs = (item.value / 100000).toFixed(2);
+    return (
+      <div className="rounded-xl border border-border/80 bg-popover/95 backdrop-blur-md px-4 py-2.5 shadow-xl min-w-[140px] text-xs pointer-events-none">
+        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+          {item.payload?.name}
+        </p>
+        <div className="flex items-center gap-2">
+          <span
+            className="h-2 w-2 rounded-full shrink-0 ring-2 ring-border/40"
+            style={{ backgroundColor: item.payload?.fill || "var(--primary)" }}
+          />
+          <span className="text-xs font-medium text-muted-foreground">Sales:</span>
+          <span className="text-sm font-bold text-foreground ml-auto">₹{valInLakhs} L</span>
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
+const BookingsTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="rounded-xl border border-border bg-card p-3 shadow-premium text-xs">
-        <p className="font-bold text-muted-foreground mb-1">{label}</p>
-        <p className="font-display text-sm font-extrabold text-primary">{payload[0].value} Leads</p>
+      <div className="rounded-xl border border-border/80 bg-popover/95 backdrop-blur-md px-4 py-2.5 shadow-xl min-w-[130px] text-xs pointer-events-none">
+        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+          {label}
+        </p>
+        <div className="flex items-center gap-2">
+          <span className="h-2 w-2 rounded-full bg-primary shrink-0 ring-2 ring-primary/20" />
+          <span className="text-xs font-medium text-muted-foreground">Bookings:</span>
+          <span className="text-sm font-bold text-foreground ml-auto">{payload[0].value}</span>
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
+const FunnelTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload.length) {
+    const item = payload[0];
+    return (
+      <div className="rounded-xl border border-border/80 bg-popover/95 backdrop-blur-md px-4 py-2.5 shadow-xl min-w-[130px] text-xs pointer-events-none">
+        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+          Pipeline Stage
+        </p>
+        <div className="flex items-center gap-2">
+          <span
+            className="h-2 w-2 rounded-full shrink-0 ring-2 ring-border/40"
+            style={{ backgroundColor: item.payload?.fill || "var(--primary)" }}
+          />
+          <span className="text-xs font-medium text-foreground">{item.payload?.stage}:</span>
+          <span className="text-xs font-bold text-primary ml-auto">{item.value} Leads</span>
+        </div>
       </div>
     );
   }
@@ -996,7 +1074,7 @@ function Dashboard() {
           <div className="h-72">
             <ResponsiveContainer>
               <LineChart data={bookingTrendData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.03)" />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border)/0.5)" />
                 <XAxis
                   dataKey="month"
                   stroke="#888"
@@ -1004,15 +1082,18 @@ function Dashboard() {
                   tickLine={false}
                   axisLine={false}
                 />
-                <YAxis stroke="#888" fontSize={12} tickLine={false} axisLine={false} />
-                <Tooltip content={<RevenueTooltip />} />
+                <Tooltip
+                  content={<RevenueTooltip />}
+                  wrapperStyle={{ outline: "none", zIndex: 50 }}
+                  cursor={{ stroke: "var(--primary)", strokeWidth: 1.5, strokeDasharray: "4 4" }}
+                />
                 <Line
                   type="monotone"
                   dataKey="revenue"
                   stroke="var(--primary)"
                   strokeWidth={3}
                   dot={{ r: 5, fill: "var(--primary)", strokeWidth: 2 }}
-                  activeDot={{ r: 7 }}
+                  activeDot={{ r: 7, strokeWidth: 2, stroke: "#fff" }}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -1046,7 +1127,7 @@ function Dashboard() {
                         <Cell key={i} fill={COLORS[i % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip />
+                    <Tooltip content={<SourceTooltip />} wrapperStyle={{ outline: "none", zIndex: 50 }} />
                     <Legend
                       verticalAlign="bottom"
                       height={40}
@@ -1085,7 +1166,11 @@ function Dashboard() {
                   axisLine={false}
                 />
                 <YAxis stroke="#888" fontSize={11} tickLine={false} axisLine={false} />
-                <Tooltip cursor={{ fill: "rgba(255,107,0,0.05)" }} />
+                <Tooltip
+                  content={<DestinationTooltip />}
+                  wrapperStyle={{ outline: "none", zIndex: 50 }}
+                  cursor={{ fill: "rgba(0, 0, 0, 0.04)" }}
+                />
                 <Bar dataKey="value" fill="var(--primary)" radius={[6, 6, 0, 0]}>
                   {destinationSalesData.map((_, i) => (
                     <Cell key={i} fill={COLORS[i % COLORS.length]} />
@@ -1216,13 +1301,14 @@ function Dashboard() {
             </div>
           </div>
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
-            className="w-full mt-4 text-xs font-semibold rounded-xl text-primary hover:text-primary-foreground hover:bg-primary"
+            className="w-full mt-4 h-9 text-xs font-semibold rounded-xl border border-primary/20 bg-primary/5 text-primary hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-200 shadow-2xs group"
             asChild
           >
-            <Link to="/crm/tasks" className="flex items-center justify-center gap-1">
-              Manage Tasks <ChevronRight className="h-3 w-3" />
+            <Link to="/crm/tasks" className="flex items-center justify-center gap-1.5 w-full">
+              <span>Manage Tasks</span>
+              <ChevronRight className="h-3.5 w-3.5 text-primary group-hover:text-primary-foreground group-hover:translate-x-0.5 transition-all duration-200" />
             </Link>
           </Button>
         </div>
@@ -1254,7 +1340,11 @@ function Dashboard() {
                   axisLine={false}
                   allowDecimals={false}
                 />
-                <Tooltip cursor={{ fill: "rgba(255,107,0,0.05)" }} />
+                <Tooltip
+                  content={<BookingsTooltip />}
+                  wrapperStyle={{ outline: "none", zIndex: 50 }}
+                  cursor={{ fill: "rgba(0, 0, 0, 0.04)" }}
+                />
                 <Bar dataKey="bookings" radius={[6, 6, 0, 0]}>
                   {bookingTrendData.map((_, index) => (
                     <Cell
@@ -1328,7 +1418,11 @@ function Dashboard() {
                     axisLine={false}
                     allowDecimals={false}
                   />
-                  <Tooltip cursor={{ fill: "rgba(255,107,0,0.05)" }} />
+                  <Tooltip
+                    content={<FunnelTooltip />}
+                    wrapperStyle={{ outline: "none", zIndex: 50 }}
+                    cursor={{ fill: "rgba(0, 0, 0, 0.04)" }}
+                  />
                   <Bar dataKey="count" radius={[6, 6, 0, 0]}>
                     {[0, 1, 2, 3, 4].map((index) => (
                       <Cell key={`cell-${index}`} fill={FUNNEL_COLORS[index]} />
@@ -1459,13 +1553,14 @@ function Dashboard() {
             </div>
           </div>
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
-            className="w-full mt-4 text-xs font-semibold rounded-xl text-primary hover:text-primary-foreground hover:bg-primary"
+            className="w-full mt-4 h-9 text-xs font-semibold rounded-xl border border-primary/20 bg-primary/5 text-primary hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-200 shadow-2xs group"
             asChild
           >
-            <Link to="/crm/tasks" className="flex items-center justify-center gap-1">
-              View all tasks <ChevronRight className="h-3 w-3" />
+            <Link to="/crm/tasks" className="flex items-center justify-center gap-1.5 w-full">
+              <span>View all tasks</span>
+              <ChevronRight className="h-3.5 w-3.5 text-primary group-hover:text-primary-foreground group-hover:translate-x-0.5 transition-all duration-200" />
             </Link>
           </Button>
         </div>
@@ -1521,18 +1616,17 @@ function Dashboard() {
               )}
             </div>
           </div>
-          {upcomingFollowups.length > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full mt-4 text-xs font-semibold rounded-xl text-primary hover:text-primary-foreground hover:bg-primary"
-              asChild
-            >
-              <Link to="/crm/leads" className="flex items-center justify-center gap-1">
-                View all leads <ChevronRight className="h-3 w-3" />
-              </Link>
-            </Button>
-          )}
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full mt-4 h-9 text-xs font-semibold rounded-xl border border-primary/20 bg-primary/5 text-primary hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-200 shadow-2xs group"
+            asChild
+          >
+            <Link to="/crm/leads" className="flex items-center justify-center gap-1.5 w-full">
+              <span>View all leads</span>
+              <ChevronRight className="h-3.5 w-3.5 text-primary group-hover:text-primary-foreground group-hover:translate-x-0.5 transition-all duration-200" />
+            </Link>
+          </Button>
         </div>
         {/* Upcoming Birthdays & Anniversaries */}
         <div className="rounded-2xl border border-border bg-card p-6 shadow-card min-w-0 flex flex-col justify-between">
@@ -1601,18 +1695,17 @@ function Dashboard() {
               )}
             </div>
           </div>
-          {upcomingEvents.length > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full mt-4 text-xs font-semibold rounded-xl text-primary hover:text-primary-foreground hover:bg-primary"
-              asChild
-            >
-              <Link to="/crm/customers" className="flex items-center justify-center gap-1">
-                View all customers <ChevronRight className="h-3 w-3" />
-              </Link>
-            </Button>
-          )}
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full mt-4 h-9 text-xs font-semibold rounded-xl border border-primary/20 bg-primary/5 text-primary hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-200 shadow-2xs group"
+            asChild
+          >
+            <Link to="/crm/customers" className="flex items-center justify-center gap-1.5 w-full">
+              <span>View all customers</span>
+              <ChevronRight className="h-3.5 w-3.5 text-primary group-hover:text-primary-foreground group-hover:translate-x-0.5 transition-all duration-200" />
+            </Link>
+          </Button>
         </div>
 
         {/* Top Clients */}
@@ -1689,18 +1782,17 @@ function Dashboard() {
               )}
             </div>
           </div>
-          {topClients.length > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full mt-4 text-xs font-semibold rounded-xl text-primary hover:text-primary-foreground hover:bg-primary"
-              asChild
-            >
-              <Link to="/crm/customers" className="flex items-center justify-center gap-1">
-                View all customers <ChevronRight className="h-3 w-3" />
-              </Link>
-            </Button>
-          )}
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full mt-4 h-9 text-xs font-semibold rounded-xl border border-primary/20 bg-primary/5 text-primary hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-200 shadow-2xs group"
+            asChild
+          >
+            <Link to="/crm/customers" className="flex items-center justify-center gap-1.5 w-full">
+              <span>View all customers</span>
+              <ChevronRight className="h-3.5 w-3.5 text-primary group-hover:text-primary-foreground group-hover:translate-x-0.5 transition-all duration-200" />
+            </Link>
+          </Button>
         </div>
 
         {/* Recent Taxi Bookings */}
@@ -1749,13 +1841,17 @@ function Dashboard() {
               )}
             </div>
           </div>
-          {taxiBookingsList.length > 0 && (
-            <Button variant="ghost" size="sm" className="w-full mt-4 text-xs font-semibold rounded-xl text-primary" asChild>
-              <Link to="/crm/taxi-booking" className="flex items-center justify-center gap-1">
-                View all taxi bookings <ChevronRight className="h-3 w-3" />
-              </Link>
-            </Button>
-          )}
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full mt-4 h-9 text-xs font-semibold rounded-xl border border-primary/20 bg-primary/5 text-primary hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-200 shadow-2xs group"
+            asChild
+          >
+            <Link to="/crm/taxi-booking" className="flex items-center justify-center gap-1.5 w-full">
+              <span>View all taxi bookings</span>
+              <ChevronRight className="h-3.5 w-3.5 text-primary group-hover:text-primary-foreground group-hover:translate-x-0.5 transition-all duration-200" />
+            </Link>
+          </Button>
         </div>
 
         {/* Recent Visa Bookings */}
@@ -1801,13 +1897,17 @@ function Dashboard() {
               )}
             </div>
           </div>
-          {visaBookingsList.length > 0 && (
-            <Button variant="ghost" size="sm" className="w-full mt-4 text-xs font-semibold rounded-xl text-primary" asChild>
-              <Link to="/crm/visa" className="flex items-center justify-center gap-1">
-                View all visa bookings <ChevronRight className="h-3 w-3" />
-              </Link>
-            </Button>
-          )}
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full mt-4 h-9 text-xs font-semibold rounded-xl border border-primary/20 bg-primary/5 text-primary hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-200 shadow-2xs group"
+            asChild
+          >
+            <Link to="/crm/visa" className="flex items-center justify-center gap-1.5 w-full">
+              <span>View all visa bookings</span>
+              <ChevronRight className="h-3.5 w-3.5 text-primary group-hover:text-primary-foreground group-hover:translate-x-0.5 transition-all duration-200" />
+            </Link>
+          </Button>
         </div>
       </div>
     </div>

@@ -50,6 +50,7 @@ import { Button } from "@/components/ui/button";
 import { getAuth, clearAuth, type AuthUser } from "@/lib/auth";
 import { EmployeeProfileModal } from "@/components/EmployeeProfileModal";
 import { CommandPalette } from "@/components/CommandPalette";
+import { NotificationBell } from "@/components/NotificationBell";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -231,6 +232,19 @@ function CrmLayout() {
       navigate({ to: userNav.length > 0 ? userNav[0].to : "/crm", replace: true });
     }
   }, [pathname, navigate, employees]);
+
+  // Seamless client-side navigation without full page reload
+  useEffect(() => {
+    const handleCrmNav = (e: any) => {
+      if (e.detail) {
+        navigate({ to: e.detail });
+      }
+    };
+    window.addEventListener("crm-navigate", handleCrmNav);
+    return () => {
+      window.removeEventListener("crm-navigate", handleCrmNav);
+    };
+  }, [navigate]);
 
   function handleLogout() {
     clearAuth();
@@ -416,6 +430,9 @@ function CrmLayout() {
               <LifeBuoy className="h-3.5 w-3.5 animate-spin-slow" />
               <span className="hidden sm:inline">IT Help Desk</span>
             </Link>
+
+            {/* Notification Bell */}
+            <NotificationBell />
 
             {/* Interactive User profile block */}
             <DropdownMenu>

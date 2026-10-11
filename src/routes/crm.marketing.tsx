@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus, Mail, MessageCircle, Send, Search, Filter, Copy, Edit2, LayoutTemplate, MoreVertical, Trash2, MessageSquare, Download } from "lucide-react";
+import { Plus, Mail, MessageCircle, Send, Search, Filter, Copy, Edit2, LayoutTemplate, MoreVertical, Trash2, MessageSquare, Download, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import {
@@ -42,18 +42,20 @@ function MarketingPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<Category | "All">("All");
   const [selectedChannel, setSelectedChannel] = useState<Channel | "All">("All");
+  const [selectedStatus, setSelectedStatus] = useState<"All" | "Active" | "Draft">("All");
   const [previewTemplate, setPreviewTemplate] = useState<Template | null>(null);
   const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isCampaignModalOpen, setIsCampaignModalOpen] = useState(false);
   const [campaignData, setCampaignData] = useState<Template | null>(null);
-  const [newTemplate, setNewTemplate] = useState<{name: string, category: string, channel: string, customCategory: string, customChannel: string, content: string}>({
+  const [newTemplate, setNewTemplate] = useState<{name: string, category: string, channel: string, customCategory: string, customChannel: string, content: string, status: "Active" | "Draft"}>({
     name: "",
     category: "Featured",
     channel: "WhatsApp",
     customCategory: "",
     customChannel: "",
-    content: ""
+    content: "",
+    status: "Active"
   });
   const [templateToDelete, setTemplateToDelete] = useState<Template | null>(null);
 
@@ -70,9 +72,40 @@ function MarketingPage() {
     category: c.audience || "General",
     channel: c.type || "Other",
     lastUpdated: c.sentDate || "N/A",
-    status: c.status || "Draft",
+    status: (c.status === "Active" || c.status === "Draft") ? c.status : "Active",
     content: c.description || ""
   }));
+
+  const handleStatusChange = (templateId: string, newStatus: "Active" | "Draft") => {
+    const todayFormatted = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    setDbTemplates((prev: any) =>
+      prev.map((t: any) =>
+        t.id === templateId
+          ? {
+              ...t,
+              status: newStatus,
+              sentDate: todayFormatted
+            }
+          : t
+      )
+    );
+    toast.success(`Template status updated to "${newStatus}"`);
+  };
+
+  const handleEditTemplate = (t: Template) => {
+    setEditingTemplateId(t.id);
+    setNewTemplate({
+      name: t.name,
+      category: CATEGORIES.includes(t.category as Category) ? t.category : "Other",
+      channel: ["WhatsApp", "Email", "SMS"].includes(t.channel as Channel) ? t.channel : "Other",
+      customCategory: !CATEGORIES.includes(t.category as Category) ? t.category : "",
+      customChannel: !["WhatsApp", "Email", "SMS"].includes(t.channel as Channel) ? t.channel : "",
+      content: t.content,
+      status: t.status || "Active"
+    });
+    setPreviewTemplate(null);
+    setIsCreateModalOpen(true);
+  };
 
   const allChannels = Array.from(new Set(["WhatsApp", "Email", "SMS", ...templates.map(t => t.channel)]));
 
@@ -87,6 +120,7 @@ function MarketingPage() {
     if (searchQuery && !t.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     if (selectedCategory !== "All" && t.category !== selectedCategory) return false;
     if (selectedChannel !== "All" && t.channel !== selectedChannel) return false;
+    if (selectedStatus !== "All" && t.status !== selectedStatus) return false;
     return true;
   });
 
@@ -144,7 +178,7 @@ function MarketingPage() {
           <Button 
             onClick={() => {
               setEditingTemplateId(null);
-              setNewTemplate({ name: "", category: "Featured", channel: "WhatsApp", customCategory: "", customChannel: "", content: "" });
+              setNewTemplate({ name: "", category: "Featured", channel: "WhatsApp", customCategory: "", customChannel: "", content: "", status: "Active" });
               setIsCreateModalOpen(true);
             }}
             className="rounded-xl shadow-lg h-10 px-4"
@@ -201,6 +235,20 @@ function MarketingPage() {
                   {channel}
                 </DropdownMenuItem>
               ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="rounded-xl h-10 border-border bg-background hover:bg-secondary/40 text-foreground font-medium shadow-sm">
+                <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
+                Status: {selectedStatus}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-36 rounded-xl p-1">
+              <DropdownMenuItem onClick={() => setSelectedStatus("All")} className={`rounded-lg cursor-pointer ${selectedStatus === "All" ? "bg-cyan-50 text-cyan-600 font-medium" : ""}`}>All Statuses</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSelectedStatus("Active")} className={`rounded-lg cursor-pointer ${selectedStatus === "Active" ? "bg-cyan-50 text-cyan-600 font-medium" : ""}`}>Active</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSelectedStatus("Draft")} className={`rounded-lg cursor-pointer ${selectedStatus === "Draft" ? "bg-cyan-50 text-cyan-600 font-medium" : ""}`}>Draft</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -291,9 +339,43 @@ function MarketingPage() {
                   </td>
                   <td className="px-6 py-4 text-muted-foreground">{template.lastUpdated}</td>
                   <td className="px-6 py-4">
-                    <span className="inline-flex items-center rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border dark:border-emerald-800/40 px-2.5 py-0.5 text-xs font-semibold">
-                      {template.status}
-                    </span>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          type="button"
+                          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold cursor-pointer transition-all hover:scale-105 select-none ${
+                            template.status === "Active"
+                              ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border dark:border-emerald-800/40"
+                              : "bg-amber-100 text-amber-800 hover:bg-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border dark:border-amber-800/40"
+                          }`}
+                          title="Click to change status"
+                        >
+                          <span
+                            className={`h-1.5 w-1.5 rounded-full ${
+                              template.status === "Active" ? "bg-emerald-500" : "bg-amber-500"
+                            }`}
+                          />
+                          {template.status}
+                          <ChevronDown className="h-3 w-3 opacity-60 ml-0.5" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" className="w-32 rounded-xl p-1 shadow-lg">
+                        <DropdownMenuItem
+                          onClick={() => handleStatusChange(template.id, "Active")}
+                          className="flex items-center gap-2 text-xs font-medium cursor-pointer rounded-lg text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-950/40"
+                        >
+                          <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                          Active
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => handleStatusChange(template.id, "Draft")}
+                          className="flex items-center gap-2 text-xs font-medium cursor-pointer rounded-lg text-amber-700 hover:bg-amber-50 dark:text-amber-300 dark:hover:bg-amber-950/40"
+                        >
+                          <span className="h-2 w-2 rounded-full bg-amber-500" />
+                          Draft
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex justify-end">
@@ -307,10 +389,20 @@ function MarketingPage() {
                           <DropdownMenuItem onClick={() => setPreviewTemplate(template)} className="rounded-lg cursor-pointer">
                             <Copy className="mr-2 h-4 w-4" /> Use Template
                           </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleEditTemplate(template)} className="rounded-lg cursor-pointer">
+                            <Edit2 className="mr-2 h-4 w-4" /> Edit Template
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => handleStatusChange(template.id, template.status === "Active" ? "Draft" : "Active")} 
+                            className="rounded-lg cursor-pointer"
+                          >
+                            <span className={`mr-2 h-2 w-2 rounded-full ${template.status === "Active" ? "bg-amber-500" : "bg-emerald-500"}`} />
+                            {template.status === "Active" ? "Set as Draft" : "Set as Active"}
+                          </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem 
                             onClick={() => setTemplateToDelete(template)} 
-                            className="rounded-lg cursor-pointer"
+                            className="rounded-lg cursor-pointer text-red-600 focus:text-red-600"
                           >
                             <Trash2 className="mr-2 h-4 w-4" /> Delete
                           </DropdownMenuItem>
@@ -357,17 +449,7 @@ function MarketingPage() {
 
                 <div className="flex gap-3">
                   <Button variant="ghost" className="rounded-xl flex-1 h-11 bg-[#FFF4E6] hover:bg-[#FFE8CC] text-[#9B3A00]" onClick={() => {
-                    setEditingTemplateId(previewTemplate.id);
-                    setNewTemplate({
-                      name: previewTemplate.name,
-                      category: CATEGORIES.includes(previewTemplate.category as Category) ? previewTemplate.category : "Other",
-                      channel: ["WhatsApp", "Email", "SMS"].includes(previewTemplate.channel as Channel) ? previewTemplate.channel : "Other",
-                      customCategory: !CATEGORIES.includes(previewTemplate.category as Category) ? previewTemplate.category : "",
-                      customChannel: !["WhatsApp", "Email", "SMS"].includes(previewTemplate.channel as Channel) ? previewTemplate.channel : "",
-                      content: previewTemplate.content
-                    });
-                    setPreviewTemplate(null);
-                    setIsCreateModalOpen(true);
+                    handleEditTemplate(previewTemplate);
                   }}>
                     <Edit2 className="h-4 w-4 mr-2" /> Edit
                   </Button>
@@ -445,6 +527,17 @@ function MarketingPage() {
               )}
             </div>
             <div className="space-y-2">
+              <label className="text-sm font-medium">Status</label>
+              <select 
+                value={newTemplate.status}
+                onChange={(e) => setNewTemplate({...newTemplate, status: e.target.value as "Active" | "Draft"})}
+                className="flex h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              >
+                <option value="Active">Active</option>
+                <option value="Draft">Draft</option>
+              </select>
+            </div>
+            <div className="space-y-2">
               <label className="text-sm font-medium">Content</label>
               <textarea 
                 value={newTemplate.content}
@@ -469,7 +562,7 @@ function MarketingPage() {
                   audience: finalCategory,
                   type: finalChannel,
                   description: newTemplate.content,
-                  status: "Active",
+                  status: newTemplate.status || "Active",
                   sentDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
                 };
                 
@@ -483,7 +576,7 @@ function MarketingPage() {
                 
                 setIsCreateModalOpen(false);
                 setEditingTemplateId(null);
-                setNewTemplate({ name: "", category: "Featured", channel: "WhatsApp", customCategory: "", customChannel: "", content: "" });
+                setNewTemplate({ name: "", category: "Featured", channel: "WhatsApp", customCategory: "", customChannel: "", content: "", status: "Active" });
               }}
             >
               {editingTemplateId ? "Save Changes" : "Save Template"}
