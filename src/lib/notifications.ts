@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { getAuth, type AuthUser } from "@/lib/auth";
 
 export interface NotificationPreferences {
   leadAssigned: boolean;
@@ -30,6 +31,52 @@ export interface AppNotification {
   timestamp: string; // ISO date string
   read: boolean;
   link: string;
+  assignedTo?: string;
+}
+
+/**
+ * Filter notifications so employees only see their assigned alerts,
+ * while Admin and Developer see all notifications.
+ */
+export function isNotificationForUser(notif: AppNotification, user: AuthUser | null): boolean {
+  if (!user) return true;
+
+  const nameLower = (user.name || "").trim().toLowerCase();
+  const isAdminOrDev =
+    user.role === "admin" ||
+    user.role === "manager" ||
+    nameLower.includes("jatin") ||
+    nameLower.includes("admin");
+
+  // Admin and Developer see all notifications
+  if (isAdminOrDev) return true;
+
+  // General company/system updates can be seen by everyone
+  if (notif.assignedTo === "all" || (notif.type === "system" && !notif.assignedTo)) {
+    return true;
+  }
+
+  // Name-specific match for employee
+  if (notif.assignedTo) {
+    const assignedLower = notif.assignedTo.trim().toLowerCase();
+    if (assignedLower === nameLower) return true;
+
+    const userFirst = nameLower.split(/\s+/)[0];
+    const assignedFirst = assignedLower.split(/\s+/)[0];
+    if (userFirst && assignedFirst && userFirst === assignedFirst) return true;
+
+    if (userFirst && (assignedLower.includes(userFirst) || nameLower.includes(assignedFirst))) {
+      return true;
+    }
+  }
+
+  // Also match if user's first name is mentioned in notification text
+  const userFirst = nameLower.split(/\s+/)[0];
+  if (userFirst && (notif.title.toLowerCase().includes(userFirst) || notif.message.toLowerCase().includes(userFirst))) {
+    return true;
+  }
+
+  return false;
 }
 
 const STORAGE_KEY_NOTIFS = "crm_notifications_list";
@@ -99,7 +146,7 @@ export async function fetchLiveNotificationsFromSupabase(): Promise<AppNotificat
       .from("leads")
       .select("id, name, status, created_at, assignedTo, destinationCity, queryType")
       .order("created_at", { ascending: false })
-      .limit(10);
+      .limit(50);
 
     if (leads && leads.length > 0) {
       leads.forEach((l: any) => {
@@ -116,6 +163,7 @@ export async function fetchLiveNotificationsFromSupabase(): Promise<AppNotificat
           timestamp: l.created_at || new Date().toISOString(),
           read: readIds.has(notifId),
           link: "/crm/leads",
+          assignedTo: l.assignedTo || "",
         });
       });
     }
@@ -125,7 +173,7 @@ export async function fetchLiveNotificationsFromSupabase(): Promise<AppNotificat
       .from("tasks")
       .select("id, title, status, dueDate, assignee, priority, created_at")
       .order("created_at", { ascending: false })
-      .limit(10);
+      .limit(30);
 
     if (tasks && tasks.length > 0) {
       tasks.forEach((t: any) => {
@@ -142,6 +190,7 @@ export async function fetchLiveNotificationsFromSupabase(): Promise<AppNotificat
           timestamp: t.created_at || new Date().toISOString(),
           read: readIds.has(notifId),
           link: "/crm/tasks",
+          assignedTo: t.assignee || "",
         });
       });
     }
@@ -149,9 +198,9 @@ export async function fetchLiveNotificationsFromSupabase(): Promise<AppNotificat
     // 3. Fetch live Bookings from Supabase
     const { data: bookings } = await supabase
       .from("bookings")
-      .select("id, status, clientName, destination, created_at")
+      .select("id, status, clientName, destination, bookedBy, created_at")
       .order("created_at", { ascending: false })
-      .limit(10);
+      .limit(30);
 
     if (bookings && bookings.length > 0) {
       bookings.forEach((b: any) => {
@@ -168,6 +217,7 @@ export async function fetchLiveNotificationsFromSupabase(): Promise<AppNotificat
           timestamp: b.created_at || new Date().toISOString(),
           read: readIds.has(notifId),
           link: "/crm/bookings",
+          assignedTo: b.bookedBy || "",
         });
       });
     }
@@ -177,7 +227,7 @@ export async function fetchLiveNotificationsFromSupabase(): Promise<AppNotificat
       .from("leaves")
       .select("id, employeeName, status, reason, days, created_at")
       .order("created_at", { ascending: false })
-      .limit(10);
+      .limit(20);
 
     if (leaves && leaves.length > 0) {
       leaves.forEach((lv: any) => {
@@ -194,6 +244,7 @@ export async function fetchLiveNotificationsFromSupabase(): Promise<AppNotificat
           timestamp: lv.created_at || new Date().toISOString(),
           read: readIds.has(notifId),
           link: "/crm/employees",
+          assignedTo: lv.employeeName || "",
         });
       });
     }
@@ -203,7 +254,7 @@ export async function fetchLiveNotificationsFromSupabase(): Promise<AppNotificat
       .from("marketing_campaigns")
       .select("id, name, status, type, sentDate, created_at")
       .order("created_at", { ascending: false })
-      .limit(6);
+      .limit(10);
 
     if (mkt && mkt.length > 0) {
       mkt.forEach((c: any) => {
@@ -220,6 +271,7 @@ export async function fetchLiveNotificationsFromSupabase(): Promise<AppNotificat
           timestamp: c.created_at || new Date().toISOString(),
           read: readIds.has(notifId),
           link: "/crm/marketing",
+          assignedTo: "all",
         });
       });
     }
@@ -340,6 +392,10 @@ function playNotificationChime() {
  * Handle incoming real-time notifications with an interactive screen bubble toast
  */
 function handleIncomingRealtimeNotification(notif: AppNotification) {
+  // Only process notification if it belongs to the current user (or user is admin/dev)
+  const auth = getAuth();
+  if (!isNotificationForUser(notif, auth)) return;
+
   const prefs = getStoredPreferences();
   if (notif.type === "lead" && !prefs.leadAssigned) return;
   if (notif.type === "task" && !prefs.taskDue) return;
@@ -428,6 +484,7 @@ export function useNotifications() {
             timestamp: l.created_at || new Date().toISOString(),
             read: false,
             link: "/crm/leads",
+            assignedTo: l.assignedTo || undefined,
           });
         }
       )
@@ -444,6 +501,7 @@ export function useNotifications() {
             timestamp: new Date().toISOString(),
             read: false,
             link: "/crm/leads",
+            assignedTo: l.assignedTo || undefined,
           });
         }
       )
@@ -461,6 +519,7 @@ export function useNotifications() {
             timestamp: t.created_at || new Date().toISOString(),
             read: false,
             link: "/crm/tasks",
+            assignedTo: t.assignee || t.assignedTo || undefined,
           });
         }
       )
@@ -477,6 +536,7 @@ export function useNotifications() {
             timestamp: new Date().toISOString(),
             read: false,
             link: "/crm/tasks",
+            assignedTo: t.assignee || t.assignedTo || undefined,
           });
         }
       )
@@ -494,6 +554,7 @@ export function useNotifications() {
             timestamp: b.created_at || new Date().toISOString(),
             read: false,
             link: "/crm/bookings",
+            assignedTo: b.bookedBy || b.createdBy || undefined,
           });
         }
       )
@@ -510,6 +571,7 @@ export function useNotifications() {
             timestamp: new Date().toISOString(),
             read: false,
             link: "/crm/bookings",
+            assignedTo: b.bookedBy || b.createdBy || undefined,
           });
         }
       )
@@ -527,6 +589,7 @@ export function useNotifications() {
             timestamp: lv.created_at || new Date().toISOString(),
             read: false,
             link: "/crm/employees",
+            assignedTo: lv.employeeName || undefined,
           });
         }
       )
@@ -544,6 +607,7 @@ export function useNotifications() {
             timestamp: m.created_at || new Date().toISOString(),
             read: false,
             link: "/crm/marketing",
+            assignedTo: "all",
           });
         }
       )
@@ -560,6 +624,7 @@ export function useNotifications() {
             timestamp: new Date().toISOString(),
             read: false,
             link: "/crm/marketing",
+            assignedTo: "all",
           });
         }
       )
@@ -581,8 +646,10 @@ export function useNotifications() {
     };
   }, [syncFromSupabase]);
 
-  // Filter notifications according to the active toggles in Settings
+  // Filter notifications according to the active toggles in Settings and User Role/Identity
+  const auth = getAuth();
   const visibleNotifications = notifications.filter((n) => {
+    if (!isNotificationForUser(n, auth)) return false;
     if (n.type === "lead" && !preferences.leadAssigned) return false;
     if (n.type === "task" && !preferences.taskDue) return false;
     if (n.type === "booking" && !preferences.bookingConfirmed) return false;

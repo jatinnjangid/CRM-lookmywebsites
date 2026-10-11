@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Bell,
   CheckCheck,
@@ -21,6 +21,7 @@ import {
   useNotifications,
   type AppNotification,
 } from "@/lib/notifications";
+import { getAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/crm/notifications")({
   head: () => ({ meta: [{ title: "Notifications — LookMyHolidays CRM" }] }),
@@ -92,6 +93,20 @@ function getVisuals(type: AppNotification["type"]) {
 
 function NotificationsPage() {
   const navigate = useNavigate();
+  const auth = getAuth();
+  const nameLower = (auth?.name || "").toLowerCase();
+  const isAdminOrDev =
+    auth?.role === "admin" ||
+    auth?.role === "manager" ||
+    nameLower.includes("jatin") ||
+    nameLower.includes("admin");
+
+  useEffect(() => {
+    if (!isAdminOrDev) {
+      navigate({ to: "/crm" });
+    }
+  }, [isAdminOrDev, navigate]);
+
   const {
     notifications,
     unreadCount,
@@ -106,6 +121,10 @@ function NotificationsPage() {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "unread" | "read">("all");
+
+  if (!isAdminOrDev) {
+    return null;
+  }
 
   const filtered = notifications.filter((n) => {
     if (search) {

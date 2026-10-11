@@ -22,6 +22,7 @@ import {
   useNotifications,
   type AppNotification,
 } from "@/lib/notifications";
+import { getAuth } from "@/lib/auth";
 
 function formatRelativeTime(dateStr: string) {
   try {
@@ -88,6 +89,14 @@ export function NotificationBell() {
 
   const displayList =
     filter === "unread" ? notifications.filter((n) => !n.read) : notifications;
+
+  const auth = getAuth();
+  const nameLower = (auth?.name || "").toLowerCase();
+  const isAdminOrDev =
+    auth?.role === "admin" ||
+    auth?.role === "manager" ||
+    nameLower.includes("jatin") ||
+    nameLower.includes("admin");
 
   return (
     <DropdownMenu>
@@ -246,17 +255,21 @@ export function NotificationBell() {
           )}
         </div>
 
-        {/* Footer */}
-        <DropdownMenuSeparator className="m-0" />
-        <div className="p-2 bg-muted/20">
-          <Link
-            to="/crm/notifications"
-            className="flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors rounded-xl"
-          >
-            <span>View All Notifications</span>
-            <ExternalLink className="h-3 w-3" />
-          </Link>
-        </div>
+        {/* Footer (Admin and Developer only) */}
+        {isAdminOrDev && (
+          <>
+            <DropdownMenuSeparator className="m-0" />
+            <div className="p-2 bg-muted/20">
+              <Link
+                to="/crm/notifications"
+                className="flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors rounded-xl"
+              >
+                <span>View All Notifications</span>
+                <ExternalLink className="h-3 w-3" />
+              </Link>
+            </div>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
