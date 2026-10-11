@@ -48,6 +48,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { getAuth, clearAuth, type AuthUser } from "@/lib/auth";
+import { supabase } from "@/lib/supabase";
 import { EmployeeProfileModal } from "@/components/EmployeeProfileModal";
 import { CommandPalette } from "@/components/CommandPalette";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -182,7 +183,7 @@ function CrmLayout() {
   const [auth, setAuth] = useState<AuthUser | null>(null);
   const [selectedEmployee, setSelectedEmployee] = useState<any | null>(null);
   const [profileSection, setProfileSection] = useState<string | null>(null);
-  const [employees] = useSupabaseTable<any[]>("employees", []);
+  const [employees, setEmployees] = useSupabaseTable<any[]>("employees", []);
 
   const [appearance] = useLocalStorage("crm-appearance", {
     theme: "light",
@@ -596,6 +597,20 @@ function CrmLayout() {
           if (!open) {
             setSelectedEmployee(null);
             setProfileSection(null);
+          }
+        }}
+        onEmployeeUpdated={async () => {
+          const { data } = await supabase.from("employees").select("*");
+          if (data && data.length > 0) {
+            setEmployees(data);
+            if (selectedEmployee) {
+              const updated = data.find((e: any) => e.id === selectedEmployee.id);
+              if (updated) setSelectedEmployee(updated);
+            }
+          }
+          const currentAuth = getAuth();
+          if (currentAuth) {
+            setAuth(currentAuth);
           }
         }}
         onAssignTask={() => {

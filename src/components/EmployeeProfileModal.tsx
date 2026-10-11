@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import {
@@ -54,7 +55,7 @@ export function EmployeeProfileModal(props: {
 }) {
   return (
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
-      {props.employee && <EmployeeProfileModalInner {...props} />}
+      {props.employee && <EmployeeProfileModalInner key={props.employee?.id} {...props} />}
     </Dialog>
   );
 }
@@ -83,23 +84,62 @@ function EmployeeProfileModalInner({
   onApproveLeave?: () => void;
   initialScrollToId?: string | null;
 }) {
-  // Load profile details or generate default
-  const defaults =
-    INITIAL_EMPLOYEE_DETAILS[employee.id] ||
-    createDefaultEmployeeDetails(
-      employee.id,
-      employee.name,
-      employee.role,
-      employee.email,
-      employee.phone,
+  // Maintain local state so edits persist immediately in modal view
+  const [employeeData, setEmployeeData] = useState<any>(employee);
+
+  useEffect(() => {
+    setEmployeeData(employee);
+  }, [employee]);
+
+  const curEmp = employeeData || employee;
+
+  // Load profile details from profile_details or fallback to _isMeta in description
+  const rawDetails = useMemo(() => {
+    let pd = curEmp?.profile_details;
+    if (!pd && typeof curEmp?.description === "string" && curEmp.description.includes("_isMeta")) {
+      try {
+        const meta = JSON.parse(curEmp.description);
+        if (meta.profile_details) {
+          pd = meta.profile_details;
+        }
+      } catch {}
+    }
+    return pd || {};
+  }, [curEmp]);
+
+  const defaults = useMemo(() => {
+    return (
+      INITIAL_EMPLOYEE_DETAILS[curEmp?.id] ||
+      createDefaultEmployeeDetails(
+        curEmp?.id || "LMH-01",
+        curEmp?.name || "Employee",
+        curEmp?.role || "Specialist",
+        curEmp?.email || "",
+        curEmp?.phone || "",
+      )
     );
-  const empDetails: EmployeeDetails = {
-    ...defaults,
-    ...(employee.profile_details || {}),
-  };
+  }, [curEmp?.id, curEmp?.name, curEmp?.role, curEmp?.email, curEmp?.phone]);
+
+  const empDetails: EmployeeDetails = useMemo(() => {
+    const combined = {
+      ...defaults,
+      ...rawDetails,
+    };
+    return {
+      ...combined,
+      skills: Array.isArray(combined.skills) ? combined.skills : [],
+      certifications: Array.isArray(combined.certifications) ? combined.certifications : [],
+      languages: Array.isArray(combined.languages) ? combined.languages : [],
+      directReports: Array.isArray(combined.directReports) ? combined.directReports : [combined.directReports].filter(Boolean),
+      careerHistory: Array.isArray(combined.careerHistory) ? combined.careerHistory : [],
+      academicBackground: Array.isArray(combined.academicBackground) ? combined.academicBackground : [],
+      familyInformation: Array.isArray(combined.familyInformation) ? combined.familyInformation : [],
+    };
+  }, [defaults, rawDetails]);
 
   // Editing state
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [editDetails, setEditDetails] = useState<EmployeeDetails | null>(null);
   const [editAvatar, setEditAvatar] = useState<string | null>(null);
   const [editCore, setEditCore] = useState({
@@ -323,8 +363,8 @@ function EmployeeProfileModalInner({
     setExpandedSection(null);
     // Load existing credentials for this employee
     try {
-      const username = employee.profile_details?.username || "";
-      const password = employee.profile_details?.password || "";
+      const username = rawDetails?.username || curEmp?.profile_details?.username || "";
+      const password = rawDetails?.password || curEmp?.profile_details?.password || "";
       setCredUsername(username);
       setCredPassword(password);
       setCredConfirm(password);
@@ -336,20 +376,20 @@ function EmployeeProfileModalInner({
     setCredSaved(false);
     setCredError("");
     setShowCredModal(false);
-  }, [employee.id, open, employee.profile_details]);
+  }, [curEmp?.id, open, rawDetails]);
 
   const handleStartEdit = () => {
     setEditCore({
-      name: employee.name,
-      role: employee.role,
-      email: employee.email,
-      phone: employee.phone,
-      status: employee.status,
-      joinDate: employee.joinDate,
-      department: employee.department || "Sales",
-      accessRole: employee.accessRole || "Employee",
+      name: curEmp.name || "",
+      role: curEmp.role || "",
+      email: curEmp.email || "",
+      phone: curEmp.phone || "",
+      status: curEmp.status || "Active",
+      joinDate: curEmp.joinDate || "",
+      department: curEmp.department || empDetails.department || "Sales",
+      accessRole: curEmp.accessRole || "Employee",
     });
-    setEditAvatar(null); // reset to current
+    setEditAvatar(curEmp.avatar || null);
     setEditDetails(JSON.parse(JSON.stringify(empDetails))); // deep clone
     setIsEditing(true);
   };
@@ -375,7 +415,8 @@ function EmployeeProfileModalInner({
     }
     try {
       const newProfileDetails = {
-        ...employee.profile_details,
+        ...empDetails,
+        ...rawDetails,
         username: credUsername.trim(),
         password: credPassword,
       };
@@ -386,30 +427,39 @@ function EmployeeProfileModalInner({
           profile_details: newProfileDetails,
           description: JSON.stringify({
             _isMeta: true,
-            text: employee.description || "",
+            text: curEmp.description || "",
             profile_details: newProfileDetails,
           }),
         })
-        .eq("id", employee.id);
+        .eq("id", curEmp.id);
 
       if (error) throw error;
       
+      setEmployeeData((prev: any) => ({
+        ...prev,
+        profile_details: newProfileDetails,
+      }));
+      INITIAL_EMPLOYEE_DETAILS[curEmp.id] = newProfileDetails;
+
       setCredSaved(true);
+      toast.success("Credentials saved successfully!");
       if (onEmployeeUpdated) onEmployeeUpdated();
       setTimeout(() => setCredSaved(false), 3000);
     } catch (err) {
       console.error(err);
       setCredError("Failed to save credentials.");
+      toast.error("Failed to save credentials.");
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!editDetails) return;
+    setIsSaving(true);
 
-    const updatedDetails = {
+    const updatedDetails: EmployeeDetails = {
       ...editDetails,
-      username: credUsername.trim() || employee.profile_details?.username || (employee.name || "").trim().split(" ")[0].toLowerCase(),
-      password: credPassword || employee.profile_details?.password || (employee.name || "").trim().split(" ")[0].toLowerCase(),
+      username: credUsername.trim() || rawDetails?.username || (curEmp.name || "").trim().split(" ")[0].toLowerCase(),
+      password: credPassword || rawDetails?.password || (curEmp.name || "").trim().split(" ")[0].toLowerCase(),
     };
 
     // Sync to Supabase directly so realtime catches it
@@ -420,6 +470,9 @@ function EmployeeProfileModalInner({
         email: editCore.email,
         phone: editCore.phone,
         status: editCore.status,
+        joinDate: editCore.joinDate,
+        department: editCore.department || curEmp.department || "Operations",
+        accessRole: editCore.accessRole || curEmp.accessRole || "Employee",
         profile_details: updatedDetails,
         description: JSON.stringify({
           _isMeta: true,
@@ -431,20 +484,44 @@ function EmployeeProfileModalInner({
         supabasePayload.avatar = editAvatar;
       }
       
-      supabase.from("employees").update(supabasePayload).eq("id", employee.id).then(({ error }) => {
-        if (error) console.error("Error updating employee profile in Supabase:", error);
-        else if (onEmployeeUpdated) onEmployeeUpdated();
-      });
+      const { error } = await supabase
+        .from("employees")
+        .update(supabasePayload)
+        .eq("id", curEmp.id);
 
+      if (error) {
+        console.error("Error updating employee profile in Supabase:", error);
+        toast.error("Failed to save profile changes. Please try again.");
+        setIsSaving(false);
+        return;
+      }
 
-      // Also update avatar in crm_auth_v1 if current user
+      // Update local state in modal so view mode immediately reflects new changes
+      setEmployeeData((prev: any) => ({
+        ...prev,
+        ...supabasePayload,
+        profile_details: updatedDetails,
+      }));
+
+      // Cache updated details in INITIAL_EMPLOYEE_DETAILS for instant memory fallback
+      INITIAL_EMPLOYEE_DETAILS[curEmp.id] = updatedDetails;
+
+      // Update avatar/auth in crm_auth_v1 if current user
       const authStored = localStorage.getItem("crm_auth_v1");
       if (authStored) {
-        const authObj = JSON.parse(authStored);
-        if (authObj.empId === employee.id) {
-          if (editAvatar) authObj.avatar = editAvatar;
-          localStorage.setItem("crm_auth_v1", JSON.stringify(authObj));
-        }
+        try {
+          const authObj = JSON.parse(authStored);
+          if (
+            authObj.empId === curEmp.id ||
+            authObj.name?.toLowerCase().trim() === curEmp.name?.toLowerCase().trim()
+          ) {
+            authObj.name = editCore.name;
+            authObj.email = editCore.email;
+            authObj.phone = editCore.phone;
+            if (editAvatar) authObj.avatar = editAvatar;
+            localStorage.setItem("crm_auth_v1", JSON.stringify(authObj));
+          }
+        } catch {}
       }
 
       // Also write back to crm_auth if the logged in user changed their own profile
@@ -453,8 +530,8 @@ function EmployeeProfileModalInner({
         try {
           const authObj2 = JSON.parse(authStored2);
           if (
-            authObj2.empId === employee.id ||
-            authObj2.name?.toLowerCase() === employee.name.toLowerCase()
+            authObj2.empId === curEmp.id ||
+            authObj2.name?.toLowerCase().trim() === curEmp.name?.toLowerCase().trim()
           ) {
             authObj2.name = editCore.name;
             authObj2.role = editCore.role;
@@ -462,24 +539,27 @@ function EmployeeProfileModalInner({
             if (editAvatar) authObj2.avatar = editAvatar;
             localStorage.setItem("crm_auth", JSON.stringify(authObj2));
           }
-        } catch {
-          // Ignore malformed auth data
-        }
+        } catch {}
+      }
+
+      toast.success("Profile details saved successfully!");
+      setIsEditing(false);
+
+      if (onEmployeeUpdated) {
+        onEmployeeUpdated();
       }
     } catch (err) {
-      console.error("Error updating employee list", err);
-    }
-
-    setIsEditing(false);
-    if (onEmployeeUpdated) {
-      onEmployeeUpdated();
+      console.error("Error updating employee profile:", err);
+      toast.error("Error saving profile details.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
   // Helper row management functions
   const updateCareer = (index: number, field: keyof CareerItem, value: string) => {
     if (!editDetails) return;
-    const history = [...editDetails.careerHistory];
+    const history = [...(editDetails.careerHistory || [])];
     history[index] = { ...history[index], [field]: value };
     setEditDetails({ ...editDetails, careerHistory: history });
   };
@@ -489,7 +569,7 @@ function EmployeeProfileModalInner({
     setEditDetails({
       ...editDetails,
       careerHistory: [
-        ...editDetails.careerHistory,
+        ...(editDetails.careerHistory || []),
         {
           company: "",
           position: "",
@@ -506,13 +586,13 @@ function EmployeeProfileModalInner({
     if (!editDetails) return;
     setEditDetails({
       ...editDetails,
-      careerHistory: editDetails.careerHistory.filter((_, i) => i !== index),
+      careerHistory: (editDetails.careerHistory || []).filter((_, i) => i !== index),
     });
   };
 
   const updateAcademic = (index: number, field: keyof AcademicItem, value: string) => {
     if (!editDetails) return;
-    const background = [...editDetails.academicBackground];
+    const background = [...(editDetails.academicBackground || [])];
     background[index] = { ...background[index], [field]: value };
     setEditDetails({ ...editDetails, academicBackground: background });
   };
@@ -522,7 +602,7 @@ function EmployeeProfileModalInner({
     setEditDetails({
       ...editDetails,
       academicBackground: [
-        ...editDetails.academicBackground,
+        ...(editDetails.academicBackground || []),
         { institution: "", qualification: "", specialization: "", year: "", grade: "" },
       ],
     });
@@ -532,13 +612,13 @@ function EmployeeProfileModalInner({
     if (!editDetails) return;
     setEditDetails({
       ...editDetails,
-      academicBackground: editDetails.academicBackground.filter((_, i) => i !== index),
+      academicBackground: (editDetails.academicBackground || []).filter((_, i) => i !== index),
     });
   };
 
   const updateFamily = (index: number, field: keyof FamilyItem, value: string) => {
     if (!editDetails) return;
-    const info = [...editDetails.familyInformation];
+    const info = [...(editDetails.familyInformation || [])];
     info[index] = { ...info[index], [field]: value };
     setEditDetails({ ...editDetails, familyInformation: info });
   };
@@ -548,7 +628,7 @@ function EmployeeProfileModalInner({
     setEditDetails({
       ...editDetails,
       familyInformation: [
-        ...editDetails.familyInformation,
+        ...(editDetails.familyInformation || []),
         { name: "", relationship: "", dob: "", contactNumber: "" },
       ],
     });
@@ -558,7 +638,7 @@ function EmployeeProfileModalInner({
     if (!editDetails) return;
     setEditDetails({
       ...editDetails,
-      familyInformation: editDetails.familyInformation.filter((_, i) => i !== index),
+      familyInformation: (editDetails.familyInformation || []).filter((_, i) => i !== index),
     });
   };
 
@@ -570,14 +650,14 @@ function EmployeeProfileModalInner({
   };
 
   // Calculate dynamic stats
-  const empAtt = attendance.filter((a) => a.empId === employee.id);
+  const empAtt = attendance.filter((a) => a.empId === curEmp.id);
   const presentDays = empAtt.filter((a) => a.status === "Present").length;
   const attendancePct = empAtt.length > 0 ? Math.round((presentDays / empAtt.length) * 100) : 100;
 
-  const empTasks = tasks.filter((t) => t.assignee === employee.name);
+  const empTasks = tasks.filter((t) => t.assignee === curEmp.name);
   const completedTasks = empTasks.filter((t) => t.status === "Done").length;
 
-  const empBookings = bookings.filter((b) => b.assignedTo === employee.name);
+  const empBookings = bookings.filter((b) => b.assignedTo === curEmp.name);
   const completedBookings = empBookings.filter(
     (b) => b.status === "Completed" || b.status === "Confirmed"
   ).length;
@@ -590,8 +670,8 @@ function EmployeeProfileModalInner({
   const mockPerf = {
     kpiScore: kpiScore,
     attendancePct: attendancePct,
-    projectsCompleted: projectsCompleted || employee.closedDeals || 0,
-    monthlyRating: employee.rating || 4.5,
+    projectsCompleted: projectsCompleted || curEmp.closedDeals || 0,
+    monthlyRating: curEmp.rating || 4.5,
     activeProjects: [
       {
         name: "Maldives Luxury Group Travel",
@@ -627,7 +707,7 @@ function EmployeeProfileModalInner({
         <DialogContent className="max-w-[95vw] w-full md:max-w-4xl lg:max-w-6xl max-h-[95vh] overflow-y-auto p-0 gap-0 border-0 rounded-3xl bg-slate-50 dark:bg-slate-900 shadow-2xl">
           <DialogTitle className="sr-only">Company CRM Employee Profile</DialogTitle>
           <DialogDescription className="sr-only">
-            Redesigned modern Company CRM Employee Profile for {employee.name}.
+            Redesigned modern Company CRM Employee Profile for {curEmp.name}.
           </DialogDescription>
 
           {/* Main Content Area */}
@@ -637,28 +717,28 @@ function EmployeeProfileModalInner({
               <div className="flex flex-col md:flex-row items-center gap-5 w-full md:w-auto">
                 {/* Profile photo — clickable upload when editing */}
                 <div className="relative shrink-0 group">
-                  {editAvatar || employee.avatar ? (
+                  {editAvatar || curEmp.avatar ? (
                     <img
-                      src={editAvatar || employee.avatar}
-                      alt={employee.name || "Employee"}
+                      src={editAvatar || curEmp.avatar}
+                      alt={curEmp.name || "Employee"}
                       className="h-20 w-20 rounded-2xl object-cover border border-border ring-4 ring-primary/10"
                     />
                   ) : (
                     <div className="h-20 w-20 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 ring-4 ring-primary/10">
                       <span className="text-4xl font-bold text-primary">
-                        {(employee.name || "?").charAt(0).toUpperCase()}
+                        {(curEmp.name || "?").charAt(0).toUpperCase()}
                       </span>
                     </div>
                   )}
                   {isEditing && (
                     <label
-                      htmlFor={`avatar-upload-${employee.id}`}
+                      htmlFor={`avatar-upload-${curEmp.id}`}
                       className="absolute inset-0 flex flex-col items-center justify-center rounded-2xl bg-black/50 opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity"
                     >
                       <Camera className="h-6 w-6 text-primary-foreground" />
                       <span className="text-[10px] text-primary-foreground font-bold mt-1">Change</span>
                       <input
-                        id={`avatar-upload-${employee.id}`}
+                        id={`avatar-upload-${curEmp.id}`}
                         type="file"
                         accept="image/*"
                         className="hidden"
@@ -700,14 +780,24 @@ function EmployeeProfileModalInner({
                         />
                       </div>
                     </div>
-                    <div className="grid grid-cols-3 gap-2">
-                      <div className="space-y-1 col-span-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <div className="space-y-1">
                         <label className="text-[10px] font-bold text-muted-foreground uppercase">
                           Work Email
                         </label>
                         <Input
                           value={editCore.email}
                           onChange={(e) => setEditCore({ ...editCore, email: e.target.value })}
+                          className="h-8 text-xs focus-visible:ring-primary"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-muted-foreground uppercase">
+                          Work Phone
+                        </label>
+                        <Input
+                          value={editCore.phone}
+                          onChange={(e) => setEditCore({ ...editCore, phone: e.target.value })}
                           className="h-8 text-xs focus-visible:ring-primary"
                         />
                       </div>
@@ -732,23 +822,23 @@ function EmployeeProfileModalInner({
                   <div className="text-center md:text-left space-y-1">
                     <div className="flex flex-wrap items-center justify-center md:justify-start gap-2.5">
                       <h2 className="text-2xl font-bold font-display text-foreground">
-                        {employee.name}
+                        {curEmp.name}
                       </h2>
                       <span
-                        className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${STATUS_COLOR[employee.status as keyof typeof STATUS_COLOR] || "bg-slate-100"}`}
+                        className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${STATUS_COLOR[curEmp.status as keyof typeof STATUS_COLOR] || "bg-slate-100"}`}
                       >
-                        {employee.status}
+                        {curEmp.status}
                       </span>
                     </div>
                     <p className="text-primary font-semibold text-sm">
-                      {employee.role} • {empDetails.department}
+                      {curEmp.role} • {empDetails.department}
                     </p>
                     <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-4 gap-y-1 text-xs text-muted-foreground pt-1">
                       <span className="flex items-center gap-1">
-                        <Mail className="h-3.5 w-3.5" /> {employee.email}
+                        <Mail className="h-3.5 w-3.5" /> {curEmp.email}
                       </span>
                       <span className="flex items-center gap-1">
-                        <Phone className="h-3.5 w-3.5" /> {employee.phone}
+                        <Phone className="h-3.5 w-3.5" /> {curEmp.phone}
                       </span>
                     </div>
                   </div>
@@ -761,7 +851,7 @@ function EmployeeProfileModalInner({
                   <p className="text-[10px] uppercase font-semibold text-muted-foreground tracking-wider">
                     Employee ID
                   </p>
-                  <p className="text-sm font-bold text-foreground mt-0.5">{employee.id}</p>
+                  <p className="text-sm font-bold text-foreground mt-0.5">{curEmp.id}</p>
                 </div>
                 <div className="text-center pl-1">
                   <p className="text-[10px] uppercase font-semibold text-muted-foreground tracking-wider">
@@ -776,7 +866,7 @@ function EmployeeProfileModalInner({
                     />
                   ) : (
                     <p className="text-sm font-bold text-foreground mt-0.5">
-                      {safeFormatDate(employee.joinDate, "en-IN", {
+                      {safeFormatDate(curEmp.joinDate, "en-IN", {
                         day: "numeric",
                         month: "short",
                         year: "numeric",
@@ -827,7 +917,7 @@ function EmployeeProfileModalInner({
                             printWindow.document.write(`
                             <html>
                               <head>
-                                <title>Employee Profile - ${employee.name}</title>
+                                <title>Employee Profile - ${curEmp.name}</title>
                                 <style>
                                   body { font-family: sans-serif; padding: 40px; color: #333; }
                                   h1 { color: hsl(var(--primary)); margin-bottom: 5px; }
@@ -841,8 +931,8 @@ function EmployeeProfileModalInner({
                                 </style>
                               </head>
                               <body>
-                                <h1>${employee.name}</h1>
-                                <div class="subtitle">${employee.role} • ${empDetails.department} (${employee.id})</div>
+                                <h1>${curEmp.name}</h1>
+                                <div class="subtitle">${curEmp.role} • ${empDetails.department} (${curEmp.id})</div>
                                 
                                 <div class="section">
                                   <div class="section-title">Employment Details</div>
@@ -857,9 +947,9 @@ function EmployeeProfileModalInner({
                                 <div class="section">
                                   <div class="section-title">Contact Information</div>
                                   <div class="grid">
-                                    <div class="field"><div class="label">Work Phone</div><div class="value">${employee.phone}</div></div>
+                                    <div class="field"><div class="label">Work Phone</div><div class="value">${curEmp.phone}</div></div>
                                     <div class="field"><div class="label">Personal Phone</div><div class="value">${empDetails.personalPhone}</div></div>
-                                    <div class="field"><div class="label">Work Email</div><div class="value">${employee.email}</div></div>
+                                    <div class="field"><div class="label">Work Email</div><div class="value">${curEmp.email}</div></div>
                                     <div class="field"><div class="label">Personal Email</div><div class="value">${empDetails.personalEmail}</div></div>
                                   </div>
                                 </div>
@@ -902,7 +992,7 @@ function EmployeeProfileModalInner({
                       />
                       <EditField
                         label="Direct Reports (Comma-separated)"
-                        value={editDetails.directReports.join(", ")}
+                        value={(editDetails.directReports || []).join(", ")}
                         onChange={(v) =>
                           setEditDetails({
                             ...editDetails,
@@ -929,7 +1019,7 @@ function EmployeeProfileModalInner({
                       <div className="space-y-1">
                         <p className="text-xs text-muted-foreground font-medium">Direct Reports</p>
                         <div className="flex flex-wrap gap-1.5 pt-0.5">
-                          {empDetails.directReports.map((r, i) => (
+                          {(empDetails.directReports || []).map((r, i) => (
                             <span
                               key={i}
                               className="text-xs bg-secondary/40 font-semibold px-2 py-0.5 rounded-md text-card-foreground"
@@ -975,7 +1065,7 @@ function EmployeeProfileModalInner({
                         <span className="text-muted-foreground text-xs font-medium">
                           Employee Code
                         </span>
-                        <span className="font-semibold text-foreground">{employee.id}</span>
+                        <span className="font-semibold text-foreground">{curEmp.id}</span>
                       </div>
                       <div className="flex justify-between items-center py-1.5 border-b border-border/50">
                         <span className="text-muted-foreground text-xs font-medium">
@@ -1386,7 +1476,7 @@ function EmployeeProfileModalInner({
                             About / Bio
                           </span>
                           <span className="col-span-2 text-card-foreground leading-relaxed font-medium">
-                            {employee.description || "Active system user."}
+                            {empDetails.bio || (typeof curEmp.description === "string" && !curEmp.description.startsWith("{") ? curEmp.description : "Active system user.")}
                           </span>
                         </div>
                       </div>
@@ -1420,7 +1510,7 @@ function EmployeeProfileModalInner({
                         <EditField
                           label="Work Phone"
                           value={editCore.phone}
-                          onChange={(v) => setEditCore({ ...editCore, phone: v })}
+                          onChange={(e) => setEditCore({ ...editCore, phone: e })}
                         />
                         <EditField
                           label="Personal Phone"
@@ -1430,7 +1520,7 @@ function EmployeeProfileModalInner({
                         <EditField
                           label="Work Email"
                           value={editCore.email}
-                          onChange={(v) => setEditCore({ ...editCore, email: v })}
+                          onChange={(e) => setEditCore({ ...editCore, email: e })}
                         />
                         <EditField
                           label="Personal Email"
@@ -1464,7 +1554,7 @@ function EmployeeProfileModalInner({
                             Work Phone
                           </span>
                           <span className="col-span-2 font-semibold text-foreground">
-                            {employee.phone}
+                            {curEmp.phone}
                           </span>
                         </div>
                         <div className="grid grid-cols-3 gap-2 py-1.5 border-b border-border/50">
@@ -1480,7 +1570,7 @@ function EmployeeProfileModalInner({
                             Work Email
                           </span>
                           <span className="col-span-2 font-semibold text-foreground">
-                            {employee.email}
+                            {curEmp.email}
                           </span>
                         </div>
                         <div className="grid grid-cols-3 gap-2 py-1.5">
@@ -1913,7 +2003,7 @@ function EmployeeProfileModalInner({
                             {/* PERFORMANCE REVIEWS */}
                             {rec === "Performance Reviews" &&
                               (() => {
-                                const empRev = reviews.filter((r) => r.empId === employee.id);
+                                const empRev = reviews.filter((r) => r.empId === curEmp.id);
                                 return (
                                   <div className="space-y-3">
                                     <div className="overflow-x-auto border border-border rounded-lg bg-card">
@@ -2015,7 +2105,7 @@ function EmployeeProfileModalInner({
                                               );
                                             const newRev = {
                                               id: `REV-${Date.now()}`,
-                                              empId: employee.id,
+                                              empId: curEmp.id,
                                               period: addReviewPeriod,
                                               rating: parseFloat(addReviewRating),
                                               feedback: addReviewFeedback,
@@ -2040,7 +2130,7 @@ function EmployeeProfileModalInner({
                             {rec === "Documents" &&
                               (() => {
                                 const empDocs = hrFiles.filter(
-                                  (d) => d.empId === employee.id || !d.empId,
+                                  (d) => d.empId === curEmp.id || !d.empId,
                                 ); // General handbook or user files
                                 return (
                                   <div className="space-y-3">
@@ -2129,7 +2219,7 @@ function EmployeeProfileModalInner({
                                             if (!addDocName) return alert("Please fill file name");
                                             const newD = {
                                               id: `DOC-${Date.now()}`,
-                                              empId: employee.id,
+                                              empId: curEmp.id,
                                               name: addDocName,
                                               type: addDocType,
                                               size: addDocSize,
@@ -2152,7 +2242,7 @@ function EmployeeProfileModalInner({
                             {/* PAYROLL RECORDS */}
                             {rec === "Payroll Records" &&
                               (() => {
-                                const empPay = payroll.filter((p) => p.empId === employee.id);
+                                const empPay = payroll.filter((p) => p.empId === curEmp.id);
                                 return (
                                   <div className="space-y-3">
                                     <div className="overflow-x-auto border border-border rounded-lg bg-card">
@@ -2250,7 +2340,7 @@ function EmployeeProfileModalInner({
                                               return alert("Please fill month and amount");
                                             const newP = {
                                               id: `PAY-${Date.now()}`,
-                                              empId: employee.id,
+                                              empId: curEmp.id,
                                               month: addPayMonth,
                                               salary: parseInt(addPaySalary),
                                               status: addPayStatus,
@@ -2274,7 +2364,7 @@ function EmployeeProfileModalInner({
                             {/* COMPANY ASSETS */}
                             {rec === "Company Assets" &&
                               (() => {
-                                const empAssets = assets.filter((a) => a.empId === employee.id);
+                                const empAssets = assets.filter((a) => a.empId === curEmp.id);
                                 return (
                                   <div className="space-y-3">
                                     <div className="overflow-x-auto border border-border rounded-lg bg-card">
@@ -2370,7 +2460,7 @@ function EmployeeProfileModalInner({
                                               );
                                             const newAst = {
                                               id: `AST-${Date.now()}`,
-                                              empId: employee.id,
+                                              empId: curEmp.id,
                                               name: addAssetName,
                                               serial: addAssetSerial,
                                               type: addAssetType,
@@ -2395,7 +2485,7 @@ function EmployeeProfileModalInner({
                             {rec === "Training Certificates" &&
                               (() => {
                                 const empCerts = certificates.filter(
-                                  (c) => c.empId === employee.id,
+                                  (c) => c.empId === curEmp.id,
                                 );
                                 return (
                                   <div className="space-y-3">
@@ -2483,7 +2573,7 @@ function EmployeeProfileModalInner({
                                               );
                                             const newCert = {
                                               id: `CRT-${Date.now()}`,
-                                              empId: employee.id,
+                                              empId: curEmp.id,
                                               name: addCertName,
                                               issuer: addCertIssuer,
                                               date: new Date().toISOString().slice(0, 10),
@@ -2525,7 +2615,7 @@ function EmployeeProfileModalInner({
             </DialogTitle>
             <DialogDescription id="cred-modal-desc" className="text-xs text-muted-foreground">
               Assign a username and password so{" "}
-              <span className="font-semibold text-foreground">{employee.name}</span> can log in to the
+              <span className="font-semibold text-foreground">{curEmp.name}</span> can log in to the
               CRM portal.
             </DialogDescription>
             <div className="mt-2 space-y-4">
@@ -2611,8 +2701,8 @@ function EmployeeProfileModalInner({
               </div>
 
               <p className="text-[10px] text-muted-foreground text-center pt-1 border-t border-border/50">
-                Employee ID: <span className="font-mono font-semibold">{employee.id}</span> · Role:{" "}
-                <span className="font-semibold">{employee.role}</span>
+                Employee ID: <span className="font-mono font-semibold">{curEmp.id}</span> · Role:{" "}
+                <span className="font-semibold">{curEmp.role}</span>
               </p>
             </div>
           </DialogContent>

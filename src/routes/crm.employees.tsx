@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
 import { getUpcomingHolidays } from "@/lib/holidays";
 import {
   UserCog,
@@ -395,12 +396,31 @@ function EmployeesPage() {
   const employeesDetails = useMemo(() => {
     const map: Record<string, EmployeeDetails> = {};
     employees.forEach((e: any) => {
+      let pd = e.profile_details;
+      if (!pd && typeof e.description === "string" && e.description.includes("_isMeta")) {
+        try {
+          const meta = JSON.parse(e.description);
+          if (meta.profile_details) {
+            pd = meta.profile_details;
+          }
+        } catch {}
+      }
       const defaults =
         INITIAL_EMPLOYEE_DETAILS[e.id] ||
         createDefaultEmployeeDetails(e.id, e.name, e.role, e.email, e.phone);
-      map[e.id] = {
+      const combined = {
         ...defaults,
-        ...(e.profile_details || {}),
+        ...(pd || {}),
+      };
+      map[e.id] = {
+        ...combined,
+        skills: Array.isArray(combined.skills) ? combined.skills : [],
+        certifications: Array.isArray(combined.certifications) ? combined.certifications : [],
+        languages: Array.isArray(combined.languages) ? combined.languages : [],
+        directReports: Array.isArray(combined.directReports) ? combined.directReports : [combined.directReports].filter(Boolean),
+        careerHistory: Array.isArray(combined.careerHistory) ? combined.careerHistory : [],
+        academicBackground: Array.isArray(combined.academicBackground) ? combined.academicBackground : [],
+        familyInformation: Array.isArray(combined.familyInformation) ? combined.familyInformation : [],
       };
     });
     return map;
@@ -1322,48 +1342,95 @@ function EmployeesPage() {
                 setProfileEditDetails(null);
               };
 
-              const handleSave = () => {
+              const handleSave = async () => {
                 if (!profileEditDetails) return;
 
-                // Sync core and details to Supabase
-                const updatedList = employees.map((e) => {
-                  if (e.id === cur.id) {
-                    return {
-                      ...e,
-                      name: profileEditCore.name,
-                      role: profileEditCore.role as Role,
-                      email: profileEditCore.email,
-                      phone: profileEditCore.phone,
-                      status: profileEditCore.status as Status,
-                      joinDate: profileEditCore.joinDate,
-                      description: profileEditDetails.bio,
-                      profile_details: profileEditDetails,
-                    };
-                  }
-                  return e;
-                });
-                setEmployees(updatedList);
+                const updatedDetails = {
+                  ...profileEditDetails,
+                  username: cur.profile_details?.username || (cur.name || "").trim().split(" ")[0].toLowerCase(),
+                  password: cur.profile_details?.password || (cur.name || "").trim().split(" ")[0].toLowerCase(),
+                };
 
-                // 3. Update auth if modifying current user
-                const authStored = localStorage.getItem("crm_auth");
-                if (authStored) {
-                  try {
-                    const authObj = JSON.parse(authStored);
-                    if (
-                      authObj.empId === cur.id ||
-                      (authObj.name && profileEditCore.name && authObj.name.toLowerCase() === profileEditCore.name.toLowerCase())
-                    ) {
-                      authObj.name = profileEditCore.name;
-                      authObj.role = profileEditCore.role;
-                      authObj.email = profileEditCore.email;
-                      localStorage.setItem("crm_auth", JSON.stringify(authObj));
+                const supabasePayload: any = {
+                  name: profileEditCore.name,
+                  role: profileEditCore.role,
+                  email: profileEditCore.email,
+                  phone: profileEditCore.phone,
+                  status: profileEditCore.status,
+                  joinDate: profileEditCore.joinDate,
+                  profile_details: updatedDetails,
+                  description: JSON.stringify({
+                    _isMeta: true,
+                    text: profileEditDetails.bio || "",
+                    profile_details: updatedDetails,
+                  }),
+                };
+
+                try {
+                  const { error } = await supabase
+                    .from("employees")
+                    .update(supabasePayload)
+                    .eq("id", cur.id);
+
+                  if (error) {
+                    console.error("Error updating employee profile in Supabase:", error);
+                    toast.error("Failed to save profile changes. Please try again.");
+                    return;
+                  }
+
+                  // Sync core and details to local state
+                  const updatedList = employees.map((e) => {
+                    if (e.id === cur.id) {
+                      return {
+                        ...e,
+                        ...supabasePayload,
+                        profile_details: updatedDetails,
+                      };
                     }
-                  } catch {
-                    // Ignore malformed auth data
-                  }
-                }
+                    return e;
+                  });
+                  setEmployees(updatedList);
+                  INITIAL_EMPLOYEE_DETAILS[cur.id] = updatedDetails;
 
-                setProfileIsEditing(false);
+                  // Update auth if modifying current user
+                  const authStored = localStorage.getItem("crm_auth");
+                  if (authStored) {
+                    try {
+                      const authObj = JSON.parse(authStored);
+                      if (
+                        authObj.empId === cur.id ||
+                        (authObj.name && profileEditCore.name && authObj.name.toLowerCase().trim() === profileEditCore.name.toLowerCase().trim())
+                      ) {
+                        authObj.name = profileEditCore.name;
+                        authObj.role = profileEditCore.role;
+                        authObj.email = profileEditCore.email;
+                        localStorage.setItem("crm_auth", JSON.stringify(authObj));
+                      }
+                    } catch {}
+                  }
+
+                  const authStoredV1 = localStorage.getItem("crm_auth_v1");
+                  if (authStoredV1) {
+                    try {
+                      const authObj = JSON.parse(authStoredV1);
+                      if (
+                        authObj.empId === cur.id ||
+                        (authObj.name && profileEditCore.name && authObj.name.toLowerCase().trim() === profileEditCore.name.toLowerCase().trim())
+                      ) {
+                        authObj.name = profileEditCore.name;
+                        authObj.email = profileEditCore.email;
+                        authObj.phone = profileEditCore.phone;
+                        localStorage.setItem("crm_auth_v1", JSON.stringify(authObj));
+                      }
+                    } catch {}
+                  }
+
+                  toast.success("Profile details saved successfully!");
+                  setProfileIsEditing(false);
+                } catch (err) {
+                  console.error(err);
+                  toast.error("Error saving profile details");
+                }
               };
 
               // Calculate dynamic stats
@@ -1661,7 +1728,7 @@ function EmployeesPage() {
                             />
                             <EditField
                               label="Direct Reports (Comma-separated)"
-                              value={profileEditDetails.directReports.join(", ")}
+                              value={(profileEditDetails.directReports || []).join(", ")}
                               onChange={(v) =>
                                 setProfileEditDetails({
                                   ...profileEditDetails,
@@ -1692,7 +1759,7 @@ function EmployeesPage() {
                                 Direct Reports
                               </p>
                               <div className="flex flex-wrap gap-1.5 pt-0.5">
-                                {empDetails.directReports.map((r, i) => (
+                                {(Array.isArray(empDetails.directReports) ? empDetails.directReports : [empDetails.directReports].filter(Boolean)).map((r, i) => (
                                   <span
                                     key={i}
                                     className="text-xs bg-gray-100 font-semibold px-2 py-0.5 rounded-md text-muted-foreground"
@@ -2004,7 +2071,7 @@ function EmployeesPage() {
                               />
                               <EditField
                                 label="Skills (Comma-separated)"
-                                value={profileEditDetails.skills.join(", ")}
+                                value={(profileEditDetails.skills || []).join(", ")}
                                 onChange={(v) =>
                                   setProfileEditDetails({
                                     ...profileEditDetails,
@@ -2017,7 +2084,7 @@ function EmployeesPage() {
                               />
                               <EditField
                                 label="Certifications (Comma-separated)"
-                                value={profileEditDetails.certifications.join(", ")}
+                                value={(profileEditDetails.certifications || []).join(", ")}
                                 onChange={(v) =>
                                   setProfileEditDetails({
                                     ...profileEditDetails,
