@@ -639,32 +639,34 @@ function VendorsPage() {
               onChange={(e) => { setQ(e.target.value); setPage(1); }}
             />
           </div>
-          <div className="flex-shrink-0 sm:ml-auto">
-            <Select value={filterType} onValueChange={(v) => { setFilterType(v); setPage(1); }}>
-              <SelectTrigger className="w-full sm:w-[240px] rounded-full h-10 font-semibold bg-white dark:bg-background">
-                <SelectValue placeholder="All Types" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="All">All Types ({stats.total})</SelectItem>
-                {VENDOR_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          {uniqueCities.length > 0 && (
+          <div className="flex flex-wrap items-center gap-3 sm:ml-auto">
             <div className="flex-shrink-0">
-              <Select value={filterCity} onValueChange={(v) => { setFilterCity(v); setPage(1); }}>
+              <Select value={filterType} onValueChange={(v) => { setFilterType(v); setPage(1); }}>
                 <SelectTrigger className="w-full sm:w-[240px] rounded-full h-10 font-semibold bg-white dark:bg-background">
-                  <SelectValue placeholder="All Cities" />
+                  <SelectValue placeholder="All Types" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="All">All Cities ({uniqueCities.length})</SelectItem>
-                  {uniqueCities.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  <SelectItem value="All">All Types ({stats.total})</SelectItem>
+                  {VENDOR_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
-          )}
-          <div className="text-sm text-muted-foreground whitespace-nowrap font-medium px-2 ml-auto">
-            {filtered.length} vendors
+            {uniqueCities.length > 0 && (
+              <div className="flex-shrink-0">
+                <Select value={filterCity} onValueChange={(v) => { setFilterCity(v); setPage(1); }}>
+                  <SelectTrigger className="w-full sm:w-[240px] rounded-full h-10 font-semibold bg-white dark:bg-background">
+                    <SelectValue placeholder="All Cities" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="All">All Cities ({uniqueCities.length})</SelectItem>
+                    {uniqueCities.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            <div className="text-sm text-muted-foreground whitespace-nowrap font-medium px-2">
+              {filtered.length} vendors
+            </div>
           </div>
         </div>
       </div>
