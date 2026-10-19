@@ -181,7 +181,7 @@ function AttendancePage() {
   const isAdmin = auth?.role === "admin" || auth?.role === "manager";
 
   const [time, setTime] = useState(new Date());
-  const upcomingHolidays = useMemo(() => getUpcomingHolidays(4, time), [time]);
+  const upcomingHolidays = useMemo(() => getUpcomingHolidays(8, time), [time]);
   const [shiftNote, setShiftNote] = useState("");
   const [selectedHistoryEmpId, setSelectedHistoryEmpId] = useState<string>("");
   const [myViewMode, setMyViewMode] = useState<"table" | "calendar">("table");
@@ -749,7 +749,7 @@ function AttendancePage() {
                   </span>
                 </div>
 
-                <div className="space-y-2.5">
+                <div className="space-y-2.5 max-h-[225px] overflow-y-auto pr-1.5 custom-scrollbar">
                   {upcomingHolidays.map((holiday) => {
                     const d = new Date(holiday.isoDate + "T00:00:00");
                     const monthShort = d.toLocaleDateString("en-GB", { month: "short" });
@@ -769,7 +769,11 @@ function AttendancePage() {
                             <p className="text-xs sm:text-sm font-bold text-foreground group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                               {holiday.name}
                             </p>
-                            <p className="text-[11px] text-muted-foreground font-medium">{holiday.date} • {holiday.day}</p>
+                            <p className="text-[11px] text-muted-foreground font-medium flex items-center gap-1.5">
+                              <span>{holiday.date}</span>
+                              <span className="text-muted-foreground/40 font-normal">|</span>
+                              <span>{holiday.day}</span>
+                            </p>
                           </div>
                         </div>
                         <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${

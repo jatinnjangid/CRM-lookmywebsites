@@ -915,7 +915,7 @@ function EmployeesPage() {
                 <Plus className="h-4 w-4" /> Add Employee
               </Button>
             </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
+          <DialogContent className="sm:max-w-[540px]">
             <DialogHeader>
               <DialogTitle>Add New Employee</DialogTitle>
               <DialogDescription>
@@ -993,7 +993,7 @@ function EmployeesPage() {
                     onChange={(e) =>
                       setNewEmployee({ ...newEmployee, role: e.target.value as Role })
                     }
-                    className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex h-10 w-full items-center justify-between rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {allRoles.map((r) => (
                       <option key={r} value={r}>
@@ -1010,7 +1010,7 @@ function EmployeesPage() {
                     onChange={(e) =>
                       setNewEmployee({ ...newEmployee, accessRole: e.target.value } as any)
                     }
-                    className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex h-10 w-full items-center justify-between rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <option value="admin">Admin (Full Access)</option>
                     <option value="manager">Manager (Mid Access)</option>
@@ -1025,7 +1025,7 @@ function EmployeesPage() {
                     onChange={(e) =>
                       setNewEmployee({ ...newEmployee, status: e.target.value as Status })
                     }
-                    className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex h-10 w-full items-center justify-between rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <option value="Active">Active</option>
                     <option value="On Leave">On Leave</option>
@@ -1033,10 +1033,11 @@ function EmployeesPage() {
                     <option value="Terminated">Terminated</option>
                   </select>
                 </div>
-                <div className="space-y-2 col-span-2">
+                <div className="space-y-2">
                   <Label htmlFor="Description">Description</Label>
                   <Input
                     id="Description"
+                    className="h-10 rounded-lg"
                     placeholder="Brief bio or description..."
                     value={newEmployee.description}
                     onChange={(e) =>
