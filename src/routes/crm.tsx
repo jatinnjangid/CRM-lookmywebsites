@@ -346,13 +346,13 @@ function CrmLayout() {
                   <HoverCardTrigger asChild>
                     <button
                       title={isCompact ? n.label : undefined}
-                      className={`group w-full flex items-center justify-between ${isCompact ? "justify-center p-3" : "gap-3 px-4 py-2.5"} rounded-full text-sm font-medium transition-all ${active || isSubActive
+                      className={`group w-full flex items-center justify-between ${isCompact ? "justify-center p-3" : "gap-3 px-4 py-2.5"} rounded-full text-sm font-medium transition-all duration-300 ease-out hover:translate-x-1.5 cursor-pointer ${active || isSubActive
                         ? "bg-primary/10 text-primary"
                         : "text-sidebar-foreground hover:bg-sidebar-accent"
                         }`}
                     >
                       <div className="flex items-center gap-3">
-                        <Icon className={isCompact ? "h-6 w-6" : "h-5 w-5"} />
+                        <Icon className={`${isCompact ? "h-6 w-6" : "h-5 w-5"} transition-transform duration-300 group-hover:scale-110`} />
                         {!isCompact && n.label}
                       </div>
                       {!isCompact && <ChevronDown className="h-4 w-4 opacity-60 transition-transform duration-200 group-data-[state=open]:rotate-180 group-data-[state=open]:opacity-100" />}
@@ -370,12 +370,12 @@ function CrmLayout() {
                           key={sub.to}
                           to={sub.to.split('?')[0]}
                           search={sub.to.includes('?') ? Object.fromEntries(new URLSearchParams(sub.to.split('?')[1])) : undefined}
-                          className={`flex items-center w-full gap-3 px-4 py-2.5 rounded-full text-sm font-semibold transition-all ${subActive
+                          className={`group flex items-center w-full gap-3 px-4 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ease-out hover:translate-x-1.5 ${subActive
                             ? "bg-primary/10 text-primary shadow-sm"
                             : "bg-transparent text-foreground hover:bg-primary/5 hover:text-primary"
                             }`}
                         >
-                          {SubIcon && <SubIcon className="h-4 w-4" />}
+                          {SubIcon && <SubIcon className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" />}
                           {sub.label}
                         </Link>
                       );
@@ -390,12 +390,12 @@ function CrmLayout() {
                 key={n.to}
                 to={n.to}
                 title={isCompact ? n.label : undefined}
-                className={`flex items-center ${isCompact ? "justify-center p-3" : "gap-3 px-4 py-2.5"} rounded-full text-sm font-medium transition-all ${active
+                className={`group flex items-center ${isCompact ? "justify-center p-3" : "gap-3 px-4 py-2.5"} rounded-full text-sm font-medium transition-all duration-300 ease-out hover:translate-x-1.5 ${active
                   ? "bg-primary/10 text-primary"
                   : "text-sidebar-foreground hover:bg-sidebar-accent"
                   }`}
               >
-                <Icon className={isCompact ? "h-6 w-6" : "h-5 w-5"} />
+                <Icon className={`${isCompact ? "h-6 w-6" : "h-5 w-5"} transition-transform duration-300 group-hover:scale-110`} />
                 {!isCompact && n.label}
               </Link>
             );
@@ -406,9 +406,9 @@ function CrmLayout() {
         <button
           onClick={handleLogout}
           title={isCompact ? "Logout" : undefined}
-          className={`mt-4 flex items-center ${isCompact ? "justify-center p-3" : "gap-2 px-3 py-2.5"} rounded-lg text-sm font-medium text-sidebar-foreground hover:bg-primary/10 hover:text-primary transition-colors`}
+          className={`group mt-4 flex items-center ${isCompact ? "justify-center p-3" : "gap-2 px-3 py-2.5"} rounded-lg text-sm font-medium text-sidebar-foreground hover:bg-primary/10 hover:text-primary transition-all duration-300 ease-out hover:translate-x-1.5 cursor-pointer`}
         >
-          <LogOut className={isCompact ? "h-6 w-6" : "h-5 w-5"} /> {!isCompact && "Logout"}
+          <LogOut className={`${isCompact ? "h-6 w-6" : "h-5 w-5"} transition-transform duration-300 group-hover:scale-110`} /> {!isCompact && "Logout"}
         </button>
 
       </aside>
