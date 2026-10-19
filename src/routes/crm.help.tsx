@@ -1233,24 +1233,24 @@ function HelpChatPage() {
               </div>
 
               {/* Chat Messages Body */}
-              <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-1 bg-muted/20 dark:bg-[#0b141a] dark:bg-[radial-gradient(#15202b_1px,transparent_1px)] dark:[background-size:16px_16px]">
+              <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-2 bg-[#f8fafc] dark:bg-[#0b141a] bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] dark:bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:20px_20px]">
                 {/* Initial Issue Card (The original query created by the employee) */}
-                <div className="rounded-2xl border border-border/80 bg-secondary/20 dark:bg-[#111b21] dark:border-[#222e35] p-4 space-y-2 mb-3">
-                  <div className="flex items-center justify-between text-xs text-muted-foreground border-b border-border/40 pb-2">
+                <div className="rounded-2xl border border-slate-200/90 bg-white dark:bg-[#111b21] dark:border-[#222e35] p-4.5 space-y-3 mb-4 shadow-xs">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground border-b border-slate-100 dark:border-border/40 pb-2.5">
                     <span className="font-semibold text-foreground flex items-center gap-1.5">
-                      <User className="h-3.5 w-3.5 text-primary" />
-                      {activeTicket.requesterName} <span className="text-[11px] font-normal">({activeTicket.requesterRole})</span>
+                      <User className="h-3.5 w-3.5 text-blue-600 dark:text-primary" />
+                      {activeTicket.requesterName} <span className="text-[11px] font-normal text-muted-foreground">({activeTicket.requesterRole})</span>
                     </span>
-                    <span>{formatDate(activeTicket.createdAt)} {formatTime(activeTicket.createdAt)}</span>
+                    <span className="text-[11px] font-medium">{formatDate(activeTicket.createdAt)} {formatTime(activeTicket.createdAt)}</span>
                   </div>
 
                   {activeTicket.relatedReference && (
-                    <div className="text-xs bg-muted/60 dark:bg-white/5 px-2.5 py-1 rounded-lg inline-block font-medium">
-                      Related Ref: <strong className="text-foreground">{activeTicket.relatedReference}</strong>
+                    <div className="text-xs bg-blue-50 text-blue-700 border border-blue-200/60 dark:bg-white/5 dark:text-slate-200 dark:border-transparent px-2.5 py-1 rounded-lg inline-block font-semibold">
+                      Related Ref: <strong className="text-blue-900 dark:text-white font-bold">{activeTicket.relatedReference}</strong>
                     </div>
                   )}
 
-                  <p className="text-xs sm:text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+                  <p className="text-xs sm:text-sm text-slate-800 dark:text-foreground leading-relaxed whitespace-pre-wrap">
                     {activeTicket.description}
                   </p>
 
@@ -1273,7 +1273,7 @@ function HelpChatPage() {
 
                 {/* IT Resolution Note Banner (if ticket resolved) */}
                 {activeTicket.itResolutionNotes && (
-                  <div className="rounded-2xl bg-emerald-500/10 border border-emerald-500/25 p-3.5 text-xs text-emerald-900 dark:text-emerald-200 flex items-start gap-2.5 mb-3">
+                  <div className="rounded-2xl bg-emerald-500/10 border border-emerald-500/25 p-3.5 text-xs text-emerald-900 dark:text-emerald-200 flex items-start gap-2.5 mb-3 shadow-xs">
                     <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400 mt-0.5" />
                     <div>
                       <span className="font-bold">IT Resolution Note: </span>
@@ -1284,17 +1284,17 @@ function HelpChatPage() {
 
                 {/* Compact Feedback Banner in Chat (if already submitted) */}
                 {activeTicket.feedbackRating && (
-                  <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 flex items-center justify-between gap-2 text-xs mb-3">
+                  <div className="rounded-2xl border border-amber-200/90 bg-amber-50/90 dark:border-amber-500/30 dark:bg-amber-500/10 p-3 flex items-center justify-between gap-2 text-xs mb-3 shadow-xs">
                     <div className="flex items-center gap-2">
                       <span className="text-xl">
                         {RATING_LABELS[activeTicket.feedbackRating]?.emoji || "⭐"}
                       </span>
                       <div>
-                        <span className="font-bold text-foreground">
+                        <span className="font-bold text-amber-950 dark:text-foreground">
                           Feedback Recorded: {activeTicket.feedbackRating}/5 — {RATING_LABELS[activeTicket.feedbackRating]?.label}
                         </span>
                         {activeTicket.feedbackText && (
-                          <span className="text-muted-foreground block text-[11px] truncate max-w-md">
+                          <span className="text-amber-800/80 dark:text-muted-foreground block text-[11px] truncate max-w-md">
                             "{activeTicket.feedbackText}"
                           </span>
                         )}
@@ -1308,21 +1308,26 @@ function HelpChatPage() {
                         setIsEditingFeedback(false);
                         setHasJustSubmittedReaction(true);
                       }}
-                      className="text-[11px] font-bold text-amber-600 dark:text-amber-400 hover:underline shrink-0"
+                      className="text-[11px] font-bold text-amber-700 dark:text-amber-400 hover:underline shrink-0"
                     >
                       View Reaction
                     </button>
                   </div>
                 )}
 
-                {/* Chat Message Thread (Modern WhatsApp Dark / Clean CRM Style) */}
+                {/* Chat Message Thread (Adaptive Light/Dark Theme) */}
                 {activeTicket.comments && activeTicket.comments.map((comm, idx, arr) => {
                   const isIT = comm.authorRole.includes("IT") || comm.authorName.toLowerCase().includes("jatin");
                   const isMe = isCommentFromMe(comm);
 
-                  // Group consecutive messages from same author to prevent repeating headers
+                  // Group consecutive messages from same author
                   const prevComm = idx > 0 ? arr[idx - 1] : null;
                   const isSameAuthorAsPrev = prevComm && isCommentFromMe(prevComm) === isMe && prevComm.authorName === comm.authorName;
+
+                  // Never repeat sender header on every alternating bubble: only show on the first appearance of this participant
+                  const prevOtherComm = arr.slice(0, idx).reverse().find(c => !isCommentFromMe(c));
+                  const isSameOtherAuthor = prevOtherComm && prevOtherComm.authorName === comm.authorName;
+                  const showSenderHeader = !isMe && !isSameOtherAuthor;
 
                   // Initials for avatar
                   const initials = (comm.authorName || "U")
@@ -1339,20 +1344,20 @@ function HelpChatPage() {
                     <div
                       key={comm.id}
                       className={`flex flex-col ${isMe ? "items-end ml-auto" : "items-start mr-auto"} max-w-[85%] sm:max-w-[72%] ${
-                        isSameAuthorAsPrev ? "mt-1.5" : "mt-3.5"
+                        isSameAuthorAsPrev ? "mt-1.5" : "mt-3"
                       }`}
                     >
-                      {/* Sender Name & Avatar above Incoming Message (only for first message in group) */}
-                      {!isMe && !isSameAuthorAsPrev && (
+                      {/* Sender Name & Avatar above Incoming Message (only on first appearance in thread) */}
+                      {showSenderHeader && (
                         <div className="flex items-center gap-1.5 mb-1 px-1 select-none">
-                          <div className="h-4.5 w-4.5 rounded-full bg-sky-500/15 border border-sky-500/30 text-[#53bdeb] text-[9px] font-bold flex items-center justify-center shrink-0">
+                          <div className="h-5 w-5 rounded-full bg-blue-500/10 dark:bg-sky-500/15 border border-blue-500/20 dark:border-sky-500/30 text-blue-600 dark:text-[#53bdeb] text-[9px] font-bold flex items-center justify-center shrink-0">
                             {initials}
                           </div>
-                          <span className="text-[11px] font-semibold text-[#53bdeb]">
+                          <span className="text-[11px] font-semibold text-slate-700 dark:text-[#53bdeb]">
                             {comm.authorName}
                           </span>
                           {isIT && (
-                            <Badge variant="secondary" className="text-[9px] py-0 px-1.5 font-bold text-[#53bdeb] bg-sky-500/10 border border-sky-500/20">
+                            <Badge variant="secondary" className="text-[9px] py-0 px-1.5 font-bold text-blue-600 bg-blue-50 border border-blue-200/60 dark:text-[#53bdeb] dark:bg-sky-500/10 dark:border-sky-500/20">
                               IT Support
                             </Badge>
                           )}
@@ -1361,13 +1366,13 @@ function HelpChatPage() {
 
                       {/* Message Bubble */}
                       <div
-                        className={`rounded-2xl px-3.5 py-2 text-xs sm:text-[13px] leading-relaxed shadow-sm break-words transition-all ${
+                        className={`rounded-2xl px-4 py-2.5 text-xs sm:text-[13px] leading-relaxed break-words transition-all ${
                           isMe
-                            ? "bg-[#005c4b] dark:bg-[#005c4b] text-white border border-emerald-500/25 rounded-tr-xs shadow-emerald-950/20"
-                            : "bg-card border border-border/80 dark:bg-[#202c33] dark:border-[#2a3942] text-foreground dark:text-slate-100 rounded-tl-xs shadow-black/20"
+                            ? "bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-[#005c4b] dark:to-[#005c4b] text-white rounded-tr-xs shadow-md shadow-blue-500/15 dark:shadow-emerald-950/20 border border-blue-500/20 dark:border-emerald-500/25"
+                            : "bg-white dark:bg-[#202c33] border border-slate-200/90 dark:border-[#2a3942] text-slate-800 dark:text-slate-100 rounded-tl-xs shadow-xs"
                         } ${
                           isCelebration
-                            ? "ring-1 ring-emerald-500/40 bg-gradient-to-br from-[#005c4b] to-[#044438]"
+                            ? "ring-2 ring-blue-500/30 dark:ring-emerald-500/40"
                             : ""
                         }`}
                       >
@@ -1376,11 +1381,11 @@ function HelpChatPage() {
                         {/* Timestamp & read receipts */}
                         <div
                           className={`flex items-center justify-end gap-1 text-[10px] mt-1 select-none font-medium ${
-                            isMe ? "text-emerald-200/70" : "text-muted-foreground dark:text-[#8696a0]"
+                            isMe ? "text-blue-100/80 dark:text-emerald-200/70" : "text-slate-400 dark:text-[#8696a0]"
                           }`}
                         >
                           <span>{formatTime(comm.createdAt)}</span>
-                          {isMe && <CheckCheck className="h-3.5 w-3.5 text-[#53bdeb]" />}
+                          {isMe && <CheckCheck className="h-3.5 w-3.5 text-blue-200 dark:text-[#53bdeb]" />}
                         </div>
                       </div>
                     </div>
@@ -1391,7 +1396,7 @@ function HelpChatPage() {
               </div>
 
               {/* Chat Input Bar */}
-              <div className="p-3 sm:p-4 border-t border-border/60 dark:border-[#222e35] bg-card dark:bg-[#111b21] shrink-0">
+              <div className="p-3 sm:p-4 border-t border-slate-200/80 dark:border-[#222e35] bg-white dark:bg-[#111b21] shrink-0">
                 <div className="flex items-center gap-2">
                   <Input
                     value={chatInput}
@@ -1403,12 +1408,12 @@ function HelpChatPage() {
                       }
                     }}
                     placeholder={`Reply to ${isITLead ? activeTicket.requesterName : "IT Administrator"}...`}
-                    className="h-11 text-xs sm:text-sm rounded-full bg-background dark:bg-[#202c33] border-border dark:border-[#2a3942] text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-[#8696a0] px-4 focus-visible:ring-emerald-500/30"
+                    className="h-11 text-xs sm:text-sm rounded-full bg-slate-50 dark:bg-[#202c33] border-slate-200/90 dark:border-[#2a3942] text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-[#8696a0] px-4.5 focus-visible:ring-2 focus-visible:ring-blue-500/30 dark:focus-visible:ring-emerald-500/30 shadow-xs transition-all"
                   />
                   <Button
                     onClick={handleSendMessage}
                     disabled={!chatInput.trim()}
-                    className="h-11 w-11 rounded-full p-0 flex items-center justify-center bg-emerald-600 hover:bg-emerald-500 text-white shrink-0 shadow-md shadow-emerald-950/40 transition-transform active:scale-95 disabled:opacity-50"
+                    className="h-11 w-11 rounded-full p-0 flex items-center justify-center bg-blue-600 hover:bg-blue-700 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white shrink-0 shadow-md shadow-blue-500/25 dark:shadow-emerald-950/40 transition-transform active:scale-95 disabled:opacity-50"
                   >
                     <Send className="h-4 w-4" />
                   </Button>
