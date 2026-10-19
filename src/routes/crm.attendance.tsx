@@ -489,7 +489,7 @@ function AttendancePage() {
 
 
   return (
-    <main className="flex-1 p-4 sm:p-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1600px] mx-auto">
+    <div className="flex-1 space-y-6 animate-in fade-in duration-300 max-w-[1600px] mx-auto pb-4">
       <Tabs defaultValue="my-attendance" className="space-y-6">
         {/* Page Top Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-border/40">
@@ -1051,7 +1051,7 @@ function AttendancePage() {
 
                     {/* Table Mode: Enhanced Attendance History Cards */}
                     {myViewMode === "table" ? (
-                      <div className="space-y-4 max-h-[920px] xl:max-h-[960px] overflow-y-auto pr-2 custom-scrollbar">
+                      <div className="space-y-4 max-h-[600px] lg:max-h-[640px] overflow-y-auto pr-2 custom-scrollbar">
                         {(() => {
                           const myRecords = attendance.filter((record) => record.employeeid === currentHistoryEmpId);
 
@@ -2770,6 +2770,6 @@ function AttendancePage() {
           </div>
         </DialogContent>
       </Dialog>
-    </main>
+    </div>
   );
 }
