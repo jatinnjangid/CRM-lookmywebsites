@@ -1051,7 +1051,7 @@ function AttendancePage() {
 
                     {/* Table Mode: Enhanced Attendance History Cards */}
                     {myViewMode === "table" ? (
-                      <div className="space-y-4 max-h-[600px] lg:max-h-[640px] overflow-y-auto pr-2 custom-scrollbar">
+                      <div className="space-y-4 max-h-[765px] overflow-y-auto pr-2 custom-scrollbar">
                         {(() => {
                           const myRecords = attendance.filter((record) => record.employeeid === currentHistoryEmpId);
 
