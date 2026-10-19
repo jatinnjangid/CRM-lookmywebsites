@@ -1394,6 +1394,85 @@ function AttendancePage() {
                               isLate = dayStats.isLate;
                             }
 
+                            let tooltipContent: React.ReactNode = null;
+                            if (dayData && dayStats) {
+                              tooltipContent = (
+                                <div className="space-y-2 min-w-[210px]">
+                                  <div className="flex items-center justify-between border-b border-border/60 pb-1.5 gap-2">
+                                    <span className="font-bold text-foreground flex items-center gap-1.5 text-xs">
+                                      <CalendarDays className="h-3.5 w-3.5 text-primary shrink-0" />
+                                      {dateStr}
+                                    </span>
+                                    {dayStats.isHalfDay ? (
+                                      <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/15 text-amber-700 dark:text-amber-400">Half Day</span>
+                                    ) : (
+                                      <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-400">Present</span>
+                                    )}
+                                  </div>
+                                  <div className="space-y-1 text-[11px]">
+                                    <div className="flex justify-between text-muted-foreground gap-3">
+                                      <span>Clock In:</span>
+                                      <span className="font-semibold text-foreground">{dayStats.firstIn !== "23:59" ? formatTime12Hour(dayStats.firstIn) : "--:--"}</span>
+                                    </div>
+                                    <div className="flex justify-between text-muted-foreground gap-3">
+                                      <span>Clock Out:</span>
+                                      <span className="font-semibold text-foreground">{dayStats.lastOut !== "00:00" ? formatTime12Hour(dayStats.lastOut) : (dayStats.isActive ? "Active Shift" : "--:--")}</span>
+                                    </div>
+                                    <div className="flex justify-between text-muted-foreground gap-3">
+                                      <span>Hours Worked:</span>
+                                      <span className="font-semibold text-foreground">{dayStats.workedH}h {dayStats.workedM}m</span>
+                                    </div>
+                                    {(dayStats.breakH > 0 || dayStats.breakM > 0) && (
+                                      <div className="flex justify-between text-muted-foreground gap-3">
+                                        <span>Break Time:</span>
+                                        <span className="font-semibold text-foreground">{dayStats.breakH > 0 ? `${dayStats.breakH}h ` : ""}{dayStats.breakM}m</span>
+                                      </div>
+                                    )}
+                                    <div className="flex justify-between border-t border-border/60 pt-1 font-bold text-foreground gap-3">
+                                      <span>Total Time:</span>
+                                      <span className="text-primary">{dayStats.totalH}h {dayStats.totalM}m</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            } else if (hasLeave) {
+                              tooltipContent = (
+                                <div className="space-y-1 min-w-[170px]">
+                                  <p className="font-bold text-blue-600 dark:text-blue-400 text-xs">Approved Leave</p>
+                                  <p className="text-muted-foreground text-[11px]">{employeeLeaves[0]?.reason || employeeLeaves[0]?.type || "Leave"}</p>
+                                </div>
+                              );
+                            } else if (holiday) {
+                              tooltipContent = (
+                                <div className="space-y-1 min-w-[170px]">
+                                  <p className="font-bold text-indigo-600 dark:text-indigo-400 text-xs flex items-center gap-1">
+                                    <Sparkles className="h-3 w-3" /> Official Holiday
+                                  </p>
+                                  <p className="font-semibold text-foreground text-xs">{holiday.name}</p>
+                                  <p className="text-muted-foreground text-[10px]">{holiday.type}</p>
+                                </div>
+                              );
+                            } else if (isWeekend) {
+                              tooltipContent = (
+                                <div className="px-1 py-0.5">
+                                  <p className="font-semibold text-muted-foreground text-xs">Weekend Off</p>
+                                </div>
+                              );
+                            } else if (isFuture) {
+                              tooltipContent = (
+                                <div className="px-1 py-0.5">
+                                  <p className="font-semibold text-muted-foreground text-xs">Upcoming Working Day</p>
+                                </div>
+                              );
+                            } else {
+                              tooltipContent = (
+                                <div className="space-y-0.5 min-w-[160px]">
+                                  <p className="font-bold text-rose-600 dark:text-rose-400 text-xs">Absent</p>
+                                  <p className="text-muted-foreground text-[11px]">No check-in recorded</p>
+                                </div>
+                              );
+                            }
+
                             days.push(
                               <TooltipProvider key={d}>
                                 <Tooltip>
@@ -1442,8 +1521,12 @@ function AttendancePage() {
                                       </div>
                                     </div>
                                   </TooltipTrigger>
-                                  <TooltipContent className="whitespace-pre-line text-xs font-medium">
-                                    {tooltip}
+                                  <TooltipContent 
+                                    side="top" 
+                                    sideOffset={6}
+                                    className="bg-card/95 backdrop-blur-md text-foreground border border-border/80 shadow-xl rounded-2xl p-3 z-50 animate-in fade-in zoom-in-95"
+                                  >
+                                    {tooltipContent}
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
