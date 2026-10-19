@@ -136,11 +136,11 @@ const INITIAL_TICKETS: SupportTicket[] = [
     requesterRole: "Employee",
     requesterEmail: "deepak@lookmyholidays.in",
     relatedReference: "BK-8821",
-    itAssignee: "Jatin Jangid (IT Administrator)",
+    itAssignee: "IT Administrator",
     comments: [
       {
         id: "c-1",
-        authorName: "Jatin Jangid (IT Administrator)",
+        authorName: "IT Administrator",
         authorRole: "IT Administrator",
         content: "Hi Deepak! 👋 Thank you for raising this. I am reviewing the calculation state logic on BK-8821 right now. Will patch it within a few minutes.",
         createdAt: "2026-09-29T10:15:00Z",
@@ -161,15 +161,15 @@ const INITIAL_TICKETS: SupportTicket[] = [
     requesterRole: "Accountant",
     requesterEmail: "aman@lookmyholidays.in",
     relatedReference: "PR-3042",
-    itAssignee: "Jatin Jangid (IT Administrator)",
+    itAssignee: "IT Administrator",
     itResolutionNotes: "Resolved: cross-origin image embed enabled in PDF generator.",
     feedbackRating: 5,
-    feedbackText: "⚡ Super Fast Resolution • Verified, working properly now! Thanks Jatin.",
+    feedbackText: "⚡ Super Fast Resolution • Verified, working properly now! Thanks IT Support.",
     feedbackSubmittedAt: "2026-09-29T16:25:00Z",
     comments: [
       {
         id: "c-2",
-        authorName: "Jatin Jangid (IT Administrator)",
+        authorName: "IT Administrator",
         authorRole: "IT Administrator",
         content: "Fixed! Please test with PR-3042 now.",
         createdAt: "2026-09-29T16:05:00Z",
@@ -178,12 +178,12 @@ const INITIAL_TICKETS: SupportTicket[] = [
         id: "c-3",
         authorName: "Aman",
         authorRole: "Accountant",
-        content: "Verified, working properly now! Thanks Jatin.",
+        content: "Verified, working properly now! Thanks IT Support.",
         createdAt: "2026-09-29T16:20:00Z",
       },
       {
         id: "c-4",
-        authorName: "Jatin Jangid (IT Administrator)",
+        authorName: "IT Administrator",
         authorRole: "IT Administrator",
         content: "🎉 Thank you so much for your 5 ⭐ rating & feedback! We appreciate your review. Glad we could resolve this CRM issue for you! 🙌",
         createdAt: "2026-09-29T16:25:05Z",
@@ -411,9 +411,9 @@ function HelpChatPage() {
               }
               const ackReply: TicketComment = {
                 id: `comm-auto-ack-${Date.now()}`,
-                authorName: "Jatin Jangid (IT Administrator)",
+                authorName: "IT Administrator",
                 authorRole: "IT Administrator",
-                content: `Hello ${auth?.name?.split(" ")[0] || "there"}! 👋 Thank you for the update. Jatin has been notified and is actively reviewing ticket #${t.ticketNumber}. We'll keep you updated here!`,
+                content: `Hello ${auth?.name?.split(" ")[0] || "there"}! 👋 Thank you for the update. IT Support has been notified and is actively reviewing ticket #${t.ticketNumber}. We'll keep you updated here!`,
                 createdAt: new Date().toISOString(),
               };
               return {
@@ -445,12 +445,12 @@ function HelpChatPage() {
     const nextIdNum = 1000 + tickets.length + 1;
     const ticketNumber = `TICK-${nextIdNum}`;
 
-    // Automatic confirmation reply from IT Administrator (Jatin)
+    // Automatic confirmation reply from IT Administrator
     const autoReplyMessage: TicketComment = {
       id: `comm-auto-${Date.now()}`,
-      authorName: "Jatin Jangid (IT Administrator)",
+      authorName: "IT Administrator",
       authorRole: "IT Administrator",
-      content: `Hello ${auth?.name?.split(" ")[0] || "there"}! 👋 Thank you for reporting this. Your query for "${newModule}" has been logged as #${ticketNumber}. I have been notified and will investigate right away. If this is an urgent CRM blocker, feel free to use the WhatsApp button above.`,
+      content: `Hello ${auth?.name?.split(" ")[0] || "there"}! 👋 Thank you for reporting this. Your query for "${newModule}" has been logged as #${ticketNumber}. IT Support has been notified and will investigate right away. If this is an urgent CRM blocker, feel free to use the WhatsApp button above.`,
       createdAt: new Date(Date.now() + 500).toISOString(),
     };
 
@@ -470,7 +470,7 @@ function HelpChatPage() {
       requesterPhone: auth?.phone || "",
       relatedReference: newRelatedRef.trim() || undefined,
       screenshotUrl: newScreenshotUrl.trim() || undefined,
-      itAssignee: "Jatin Jangid (IT Administrator)",
+      itAssignee: "IT Administrator",
       comments: [autoReplyMessage],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -523,16 +523,16 @@ function HelpChatPage() {
     if (!isITLead) {
       setTimeout(() => {
         const lower = userText.toLowerCase().trim();
-        let replyContent = `Thank you for the update! Jatin has received your message and is on it. 👍`;
+        let replyContent = `Thank you for the update! IT Support has received your message and is on it. 👍`;
 
         if (lower === "no" || lower.startsWith("no ") || lower === "not yet" || lower === "not working") {
-          replyContent = `Understood. Jatin is actively investigating why this is occurring on your account and will patch it shortly. Thanks for your patience! 🙏`;
+          replyContent = `Understood. IT Support is actively investigating why this is occurring on your account and will patch it shortly. Thanks for your patience! 🙏`;
         } else if (lower === "yes" || lower === "ok" || lower === "okay" || lower === "done" || lower.includes("resolved") || lower.includes("working now")) {
           replyContent = `Awesome! Glad to hear that. 👍 If everything looks good on your side, please tap "Rate & Feedback" above to leave your review! ⭐`;
         } else if (lower.includes("thank") || lower.includes("thx") || lower.includes("shukriya")) {
           replyContent = `You're very welcome! Always happy to keep LookMyHolidays CRM fast and smooth. Please share your rating / feedback above whenever you can! 😊`;
         } else if (lower.includes("urgent") || lower.includes("critical") || lower.includes("fast") || lower.includes("jaldi")) {
-          replyContent = `Noted as high priority! Jatin has been notified with high urgency. If needed, you can also tap the WhatsApp button above for an immediate ping. ⚡`;
+          replyContent = `Noted as high priority! IT Support has been notified with high urgency. If needed, you can also tap the WhatsApp button above for an immediate ping. ⚡`;
         }
 
         setTickets((latest) =>
@@ -540,7 +540,7 @@ function HelpChatPage() {
             if (t.id === activeTicket.id) {
               const ackReply: TicketComment = {
                 id: `comm-ack-${Date.now()}`,
-                authorName: "Jatin Jangid (IT Administrator)",
+                authorName: "IT Administrator",
                 authorRole: "IT Administrator",
                 content: replyContent,
                 createdAt: new Date().toISOString(),
@@ -631,7 +631,7 @@ function HelpChatPage() {
     setIsEditingFeedback(false);
     setIsFeedbackPopupOpen(true);
     setHasJustSubmittedReaction(true);
-    toast.success("Thank you! Your feedback & reaction have been sent to Jatin.");
+    toast.success("Thank you! Your feedback & reaction have been sent to IT Support.");
   };
 
   // Delete Ticket (Custom Pop-up Dialog) - strictly IT Lead
@@ -715,13 +715,13 @@ function HelpChatPage() {
   // WhatsApp quick ping link
   const getWhatsAppLink = (ticket: SupportTicket) => {
     const text = encodeURIComponent(
-      `Hello Jatin (IT Lead), I have an urgent query on CRM.\n\n*Ticket #:* ${ticket.ticketNumber}\n*Module:* ${ticket.module}\n*Subject:* ${ticket.subject}\n*Requester:* ${ticket.requesterName}\n\nPlease check this at your earliest convenience.`
+      `Hello IT Support, I have an urgent query on CRM.\n\n*Ticket #:* ${ticket.ticketNumber}\n*Module:* ${ticket.module}\n*Subject:* ${ticket.subject}\n*Requester:* ${ticket.requesterName}\n\nPlease check this at your earliest convenience.`
     );
     return `https://wa.me/917340098982?text=${text}`;
   };
 
   const directGeneralWhatsApp = `https://wa.me/917340098982?text=${encodeURIComponent(
-    `Hello Jatin (IT Lead), I have an urgent issue with LookMyHolidays CRM. Please help!`
+    `Hello IT Support, I have an urgent issue with LookMyHolidays CRM. Please help!`
   )}`;
 
   // Determine if a message is sent by "ME" (outgoing -> right) or INCOMING (-> left)
@@ -780,7 +780,7 @@ function HelpChatPage() {
                 </div>
                 <div>
                   <h2 className="text-sm font-bold text-foreground leading-tight">IT Support Help</h2>
-                  <p className="text-[11px] text-muted-foreground">Direct chat with IT (Jatin)</p>
+                  <p className="text-[11px] text-muted-foreground">Direct chat with IT Support</p>
                 </div>
               </div>
 
@@ -950,7 +950,7 @@ function HelpChatPage() {
                   </button>
                   <div>
                     <h3 className="text-base font-bold text-foreground">Raise New Query / Report Issue</h3>
-                    <p className="text-xs text-muted-foreground">Send query to IT lead (Jatin) for instant review</p>
+                    <p className="text-xs text-muted-foreground">Send query to IT Support for instant review</p>
                   </div>
                 </div>
 
@@ -1195,7 +1195,7 @@ function HelpChatPage() {
                     href={getWhatsAppLink(activeTicket)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    title="Send to Jatin directly on WhatsApp"
+                    title="Send directly to IT Support on WhatsApp"
                     className="flex items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 transition-all"
                   >
                     <Phone className="h-3 w-3" />
@@ -1376,7 +1376,7 @@ function HelpChatPage() {
                         handleSendMessage();
                       }
                     }}
-                    placeholder={`Reply to ${isITLead ? activeTicket.requesterName : "IT Administrator (Jatin)"}...`}
+                    placeholder={`Reply to ${isITLead ? activeTicket.requesterName : "IT Administrator"}...`}
                     className="h-10 text-xs rounded-xl bg-background"
                   />
                   <Button
@@ -1457,7 +1457,7 @@ function HelpChatPage() {
                   How was your IT Support experience?
                 </h4>
                 <p className="text-[11px] text-muted-foreground">
-                  Share feedback for Jatin (IT Lead) on ticket #{activeTicket.ticketNumber}
+                  Share feedback for IT Support on ticket #{activeTicket.ticketNumber}
                 </p>
               </div>
             </div>
@@ -1490,7 +1490,7 @@ function HelpChatPage() {
                   <span>Thank You So Much!</span> <span>🙏</span>
                 </h3>
                 <p className="text-xs text-muted-foreground">
-                  Your reaction & feedback has been sent directly to Jatin.
+                  Your reaction & feedback has been sent directly to IT Support.
                 </p>
               </div>
 
@@ -1653,7 +1653,7 @@ function HelpChatPage() {
                   rows={2}
                   value={feedbackComment}
                   onChange={(e) => setFeedbackComment(e.target.value)}
-                  placeholder="Optional: Any suggestion or thank-you note for Jatin..."
+                  placeholder="Optional: Any suggestion or thank-you note for IT Support..."
                   className="text-xs rounded-2xl bg-background border-border resize-none p-3 shadow-inner"
                 />
               </div>
