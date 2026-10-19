@@ -1494,13 +1494,25 @@ function AttendancePage() {
                               <div className="grid grid-cols-7 border-l border-t border-border/50 bg-background">
                                 {days}
                               </div>
-                              <div className="p-4 border-t border-border/60 bg-secondary/10 flex flex-wrap gap-4 items-center justify-center text-xs font-semibold text-muted-foreground">
-                                <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-emerald-500" /> Present</span>
-                                <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-rose-500" /> Absent</span>
-                                <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-amber-500" /> Half Day</span>
-                                <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-blue-500" /> Leave</span>
-                                <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-indigo-500" /> Holiday</span>
-                                <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-slate-400" /> Weekend</span>
+                              <div className="p-4 border-t border-border/60 bg-secondary/10 flex flex-wrap gap-2.5 items-center justify-center">
+                                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/25 px-2.5 py-1 rounded-lg shadow-xs">
+                                  <Clock className="h-3 w-3 text-emerald-600 shrink-0" /> Present
+                                </span>
+                                <span className="inline-flex items-center text-[11px] font-semibold text-rose-600 dark:text-rose-400 bg-rose-500/10 dark:bg-rose-500/15 border border-rose-500/20 px-2.5 py-1 rounded-lg shadow-xs">
+                                  Absent
+                                </span>
+                                <span className="inline-flex items-center text-[11px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-500/10 dark:bg-amber-500/20 border border-amber-500/25 px-2.5 py-1 rounded-lg shadow-xs">
+                                  Half Day
+                                </span>
+                                <span className="inline-flex items-center text-[11px] font-semibold text-blue-700 dark:text-blue-300 bg-blue-500/10 dark:bg-blue-500/20 border border-blue-500/25 px-2.5 py-1 rounded-lg shadow-xs">
+                                  Leave
+                                </span>
+                                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-500/10 dark:bg-indigo-500/20 border border-indigo-500/25 px-2.5 py-1 rounded-lg shadow-xs">
+                                  <Sparkles className="h-3 w-3 text-indigo-500 shrink-0" /> Holiday
+                                </span>
+                                <span className="inline-flex items-center text-[11px] font-medium text-muted-foreground/70 bg-secondary/50 border border-border/50 px-2.5 py-1 rounded-lg shadow-xs">
+                                  Weekend
+                                </span>
                               </div>
                             </div>
                           );
