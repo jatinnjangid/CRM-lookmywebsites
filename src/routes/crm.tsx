@@ -42,7 +42,6 @@ import {
   Megaphone,
   Wallet,
   Car,
-  Share2,
   LifeBuoy,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -79,15 +78,7 @@ type NavItem = {
 
 const FULL_NAV: NavItem[] = [
   { to: "/crm", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { 
-    to: "/crm/leads", 
-    label: "Leads", 
-    icon: Users,
-    subItems: [
-      { label: "All Leads", to: "/crm/leads", icon: Users },
-      { label: "Meta Integration", to: "/crm/meta-integration", icon: Share2 }
-    ]
-  },
+  { to: "/crm/leads", label: "Leads", icon: Users },
   { to: "/crm/quotations", label: "Quotations", icon: FileText },
   { to: "/crm/tasks", label: "Tasks", icon: ListChecks },
   { to: "/crm/visa", label: "Visa", icon: Plane },
@@ -114,8 +105,8 @@ const FULL_NAV: NavItem[] = [
   { to: "/crm/Accounts", label: "Accounts", icon: CreditCard },
   { to: "/crm/personal-expenses", label: "Personal Expenses", icon: Wallet },
   { to: "/crm/marketing", label: "Marketing", icon: Megaphone },
-  { to: "/crm/settings", label: "Settings", icon: Settings },
   { to: "/crm/help", label: "Help & Support", icon: LifeBuoy },
+  { to: "/crm/settings", label: "Settings", icon: Settings },
 ];
 
 function getNavForUser(auth: AuthUser): NavItem[] {
@@ -406,7 +397,7 @@ function CrmLayout() {
         <button
           onClick={handleLogout}
           title={isCompact ? "Logout" : undefined}
-          className={`group mt-4 flex items-center ${isCompact ? "justify-center p-3" : "gap-2 px-3 py-2.5"} rounded-lg text-sm font-medium text-sidebar-foreground hover:bg-primary/10 hover:text-primary transition-all duration-300 ease-out hover:translate-x-1.5 cursor-pointer`}
+          className={`group mt-4 flex items-center ${isCompact ? "justify-center p-3" : "gap-3 px-4 py-2.5"} rounded-full text-sm font-medium bg-red-500/10 text-red-500 hover:bg-red-500/20 hover:text-red-400 dark:bg-red-500/15 dark:text-red-400 dark:hover:bg-red-500/25 dark:hover:text-red-300 transition-all duration-300 ease-out hover:translate-x-1.5 cursor-pointer`}
         >
           <LogOut className={`${isCompact ? "h-6 w-6" : "h-5 w-5"} transition-transform duration-300 group-hover:scale-110`} /> {!isCompact && "Logout"}
         </button>
@@ -570,9 +561,9 @@ function CrmLayout() {
                 <DropdownMenuSeparator className="my-2" />
                 <DropdownMenuItem
                   onClick={handleLogout}
-                  className="cursor-pointer gap-2 py-2.5 text-primary focus:text-primary focus:bg-primary/10 rounded-lg justify-center font-medium"
+                  className="cursor-pointer gap-2 py-2.5 text-red-500 focus:text-red-500 focus:bg-red-500/10 rounded-lg justify-center font-medium"
                 >
-                  <LogOut className="h-4 w-4 text-primary" />
+                  <LogOut className="h-4 w-4 text-red-500" />
                   <span>Log out securely</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>

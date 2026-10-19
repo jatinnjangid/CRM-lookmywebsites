@@ -148,6 +148,7 @@ export function useSupabaseTable<T extends Array<any>>(tableName: string, initia
       delete newRow.employee;
     }
     if (tableName === "packages") delete newRow.active;
+    if (tableName === "folders") delete newRow.parentId;
     if (tableName === "reviews" && newRow.empId) {
       newRow.employeeId = newRow.empId;
       delete newRow.empId;

@@ -1103,7 +1103,7 @@ function HelpChatPage() {
             /* ACTIVE CHAT THREAD */
             <>
               {/* Chat Header */}
-              <div className="p-3.5 sm:px-5 border-b border-border/60 bg-card/60 backdrop-blur flex items-center justify-between gap-3 shrink-0">
+              <div className="p-3.5 sm:px-5 border-b border-border/60 dark:border-[#222e35] bg-card/60 dark:bg-[#111b21] backdrop-blur flex items-center justify-between gap-3 shrink-0">
                 <div className="flex items-center gap-2.5 min-w-0">
                   <button
                     onClick={() => setSelectedTicketId(null)}
@@ -1205,7 +1205,7 @@ function HelpChatPage() {
                   {/* IT Lead status toggles */}
                   {isITLead && (
                     <Select value={activeTicket.status} onValueChange={(s: any) => handleUpdateStatus(s)}>
-                      <SelectTrigger className="h-8 text-xs rounded-xl w-[110px] bg-background">
+                      <SelectTrigger className="h-8 text-xs rounded-xl w-[110px] bg-background dark:bg-[#202c33] dark:border-[#2a3942]">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="rounded-xl">
@@ -1233,9 +1233,9 @@ function HelpChatPage() {
               </div>
 
               {/* Chat Messages Body */}
-              <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5 bg-muted/20 dark:bg-zinc-950/40">
+              <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-1 bg-muted/20 dark:bg-[#0b141a] dark:bg-[radial-gradient(#15202b_1px,transparent_1px)] dark:[background-size:16px_16px]">
                 {/* Initial Issue Card (The original query created by the employee) */}
-                <div className="rounded-2xl border border-border/80 bg-secondary/20 p-4 space-y-2">
+                <div className="rounded-2xl border border-border/80 bg-secondary/20 dark:bg-[#111b21] dark:border-[#222e35] p-4 space-y-2 mb-3">
                   <div className="flex items-center justify-between text-xs text-muted-foreground border-b border-border/40 pb-2">
                     <span className="font-semibold text-foreground flex items-center gap-1.5">
                       <User className="h-3.5 w-3.5 text-primary" />
@@ -1245,7 +1245,7 @@ function HelpChatPage() {
                   </div>
 
                   {activeTicket.relatedReference && (
-                    <div className="text-xs bg-muted/60 px-2.5 py-1 rounded-lg inline-block font-medium">
+                    <div className="text-xs bg-muted/60 dark:bg-white/5 px-2.5 py-1 rounded-lg inline-block font-medium">
                       Related Ref: <strong className="text-foreground">{activeTicket.relatedReference}</strong>
                     </div>
                   )}
@@ -1273,7 +1273,7 @@ function HelpChatPage() {
 
                 {/* IT Resolution Note Banner (if ticket resolved) */}
                 {activeTicket.itResolutionNotes && (
-                  <div className="rounded-2xl bg-emerald-500/10 border border-emerald-500/25 p-3.5 text-xs text-emerald-900 dark:text-emerald-200 flex items-start gap-2.5">
+                  <div className="rounded-2xl bg-emerald-500/10 border border-emerald-500/25 p-3.5 text-xs text-emerald-900 dark:text-emerald-200 flex items-start gap-2.5 mb-3">
                     <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400 mt-0.5" />
                     <div>
                       <span className="font-bold">IT Resolution Note: </span>
@@ -1284,7 +1284,7 @@ function HelpChatPage() {
 
                 {/* Compact Feedback Banner in Chat (if already submitted) */}
                 {activeTicket.feedbackRating && (
-                  <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 flex items-center justify-between gap-2 text-xs">
+                  <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 flex items-center justify-between gap-2 text-xs mb-3">
                     <div className="flex items-center gap-2">
                       <span className="text-xl">
                         {RATING_LABELS[activeTicket.feedbackRating]?.emoji || "⭐"}
@@ -1315,34 +1315,60 @@ function HelpChatPage() {
                   </div>
                 )}
 
-                {/* Chat Message Thread (WhatsApp Style: Incoming on Left, Me on Right) */}
-                {activeTicket.comments && activeTicket.comments.map((comm) => {
+                {/* Chat Message Thread (Modern WhatsApp Dark / Clean CRM Style) */}
+                {activeTicket.comments && activeTicket.comments.map((comm, idx, arr) => {
                   const isIT = comm.authorRole.includes("IT") || comm.authorName.toLowerCase().includes("jatin");
                   const isMe = isCommentFromMe(comm);
+
+                  // Group consecutive messages from same author to prevent repeating headers
+                  const prevComm = idx > 0 ? arr[idx - 1] : null;
+                  const isSameAuthorAsPrev = prevComm && isCommentFromMe(prevComm) === isMe && prevComm.authorName === comm.authorName;
+
+                  // Initials for avatar
+                  const initials = (comm.authorName || "U")
+                    .split(" ")
+                    .map((n) => n[0])
+                    .filter(Boolean)
+                    .slice(0, 2)
+                    .join("")
+                    .toUpperCase();
+
+                  const isCelebration = comm.content.includes("🎉") || comm.content.includes("5 ⭐");
 
                   return (
                     <div
                       key={comm.id}
-                      className={`flex flex-col ${isMe ? "items-end ml-auto" : "items-start mr-auto"} max-w-[85%] sm:max-w-[70%]`}
+                      className={`flex flex-col ${isMe ? "items-end ml-auto" : "items-start mr-auto"} max-w-[85%] sm:max-w-[72%] ${
+                        isSameAuthorAsPrev ? "mt-1.5" : "mt-3.5"
+                      }`}
                     >
-                      {/* Sender Name above Incoming Message */}
-                      {!isMe && (
-                        <div className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 mb-1 px-1">
-                          <span>{comm.authorName}</span>
+                      {/* Sender Name & Avatar above Incoming Message (only for first message in group) */}
+                      {!isMe && !isSameAuthorAsPrev && (
+                        <div className="flex items-center gap-1.5 mb-1 px-1 select-none">
+                          <div className="h-4.5 w-4.5 rounded-full bg-sky-500/15 border border-sky-500/30 text-[#53bdeb] text-[9px] font-bold flex items-center justify-center shrink-0">
+                            {initials}
+                          </div>
+                          <span className="text-[11px] font-semibold text-[#53bdeb]">
+                            {comm.authorName}
+                          </span>
                           {isIT && (
-                            <Badge variant="secondary" className="text-[9px] py-0 px-1 font-bold text-primary">
+                            <Badge variant="secondary" className="text-[9px] py-0 px-1.5 font-bold text-[#53bdeb] bg-sky-500/10 border border-sky-500/20">
                               IT Support
                             </Badge>
                           )}
                         </div>
                       )}
 
-                      {/* WhatsApp Message Bubble */}
+                      {/* Message Bubble */}
                       <div
-                        className={`rounded-2xl px-4 py-2 text-xs sm:text-sm leading-relaxed shadow-xs break-words ${
+                        className={`rounded-2xl px-3.5 py-2 text-xs sm:text-[13px] leading-relaxed shadow-sm break-words transition-all ${
                           isMe
-                            ? "bg-emerald-600 text-white rounded-tr-xs"
-                            : "bg-card border border-border/80 text-foreground dark:bg-zinc-800 rounded-tl-xs"
+                            ? "bg-[#005c4b] dark:bg-[#005c4b] text-white border border-emerald-500/25 rounded-tr-xs shadow-emerald-950/20"
+                            : "bg-card border border-border/80 dark:bg-[#202c33] dark:border-[#2a3942] text-foreground dark:text-slate-100 rounded-tl-xs shadow-black/20"
+                        } ${
+                          isCelebration
+                            ? "ring-1 ring-emerald-500/40 bg-gradient-to-br from-[#005c4b] to-[#044438]"
+                            : ""
                         }`}
                       >
                         <p className="whitespace-pre-wrap">{comm.content}</p>
@@ -1350,11 +1376,11 @@ function HelpChatPage() {
                         {/* Timestamp & read receipts */}
                         <div
                           className={`flex items-center justify-end gap-1 text-[10px] mt-1 select-none font-medium ${
-                            isMe ? "text-emerald-100/90" : "text-muted-foreground"
+                            isMe ? "text-emerald-200/70" : "text-muted-foreground dark:text-[#8696a0]"
                           }`}
                         >
                           <span>{formatTime(comm.createdAt)}</span>
-                          {isMe && <CheckCheck className="h-3.5 w-3.5 text-emerald-200" />}
+                          {isMe && <CheckCheck className="h-3.5 w-3.5 text-[#53bdeb]" />}
                         </div>
                       </div>
                     </div>
@@ -1365,7 +1391,7 @@ function HelpChatPage() {
               </div>
 
               {/* Chat Input Bar */}
-              <div className="p-3 sm:p-4 border-t border-border/60 bg-card shrink-0">
+              <div className="p-3 sm:p-4 border-t border-border/60 dark:border-[#222e35] bg-card dark:bg-[#111b21] shrink-0">
                 <div className="flex items-center gap-2">
                   <Input
                     value={chatInput}
@@ -1377,15 +1403,14 @@ function HelpChatPage() {
                       }
                     }}
                     placeholder={`Reply to ${isITLead ? activeTicket.requesterName : "IT Administrator"}...`}
-                    className="h-10 text-xs rounded-xl bg-background"
+                    className="h-11 text-xs sm:text-sm rounded-full bg-background dark:bg-[#202c33] border-border dark:border-[#2a3942] text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-[#8696a0] px-4 focus-visible:ring-emerald-500/30"
                   />
                   <Button
                     onClick={handleSendMessage}
                     disabled={!chatInput.trim()}
-                    className="h-10 rounded-xl px-4 bg-primary text-primary-foreground text-xs font-semibold gap-1.5 shadow-sm"
+                    className="h-11 w-11 rounded-full p-0 flex items-center justify-center bg-emerald-600 hover:bg-emerald-500 text-white shrink-0 shadow-md shadow-emerald-950/40 transition-transform active:scale-95 disabled:opacity-50"
                   >
-                    <Send className="h-3.5 w-3.5" />
-                    <span className="hidden sm:inline">Send</span>
+                    <Send className="h-4 w-4" />
                   </Button>
                 </div>
               </div>

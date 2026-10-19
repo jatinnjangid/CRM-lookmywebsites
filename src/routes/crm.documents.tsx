@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import mammoth from "mammoth";
 import {
   Folder,
@@ -68,14 +68,16 @@ interface FolderItem {
   parentId?: string | null;
 }
 
-/* ─── Persistence key ─── */
-const LS_KEY = "crm_documents_v1";
+/* ─── Fast Local Cache key ─── */
+const LS_KEY = "crm_documents_cache_v2";
 
 function loadFromStorage(): FolderItem[] | null {
   try {
     const raw = localStorage.getItem(LS_KEY);
     if (!raw) return null;
-    return JSON.parse(raw) as FolderItem[];
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed) && parsed.length > 0) return parsed as FolderItem[];
+    return null;
   } catch {
     return null;
   }
@@ -83,10 +85,22 @@ function loadFromStorage(): FolderItem[] | null {
 
 function saveToStorage(folders: FolderItem[]) {
   try {
-    localStorage.setItem(LS_KEY, JSON.stringify(folders));
+    const lightweight = folders.map((f) => ({
+      ...f,
+      files: Array.isArray(f.files)
+        ? f.files.map((file) => ({
+            id: file.id,
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            uploadedAt: file.uploadedAt,
+            dataUrl: "", // Strip dataUrl to keep cache fast and tiny (4 KB)
+          }))
+        : [],
+    }));
+    localStorage.setItem(LS_KEY, JSON.stringify(lightweight));
   } catch (e) {
-    // Storage full – warn quietly
-    console.warn("localStorage full, could not save documents:", e);
+    console.warn("localStorage save error:", e);
   }
 }
 
@@ -155,69 +169,230 @@ function genFileId() {
   return `U-${String(_uid++).padStart(4, "0")}`;
 }
 
-/* ─── Seed folders (only used when localStorage is empty) ─── */
+/* ─── Seed folders (Instant baseline matching actual 12 folders) ─── */
 const SEED_FOLDERS: FolderItem[] = [
   {
-    id: "F-01",
-    name: "Passports & IDs",
-    color: pickColor(0).bg,
-    iconColor: pickColor(0).icon,
-    createdAt: "2026-01-10",
-    description: "Customer passport scans and ID documents",
-    files: [],
+    id: "F-msx6oaug",
+    name: "Sunil Samariya",
+    color: "bg-emerald-100 text-emerald-600 border-emerald-200",
+    iconColor: "#10b981",
+    createdAt: "2026-08-17T12:01:50.824Z",
+    description: "Insurance for Sunil Samariya",
     manager: "Pushplata Kriplani",
+    files: [
+      {
+        id: "U-msx6oauy-sjt1q",
+        name: "RJ14XD6515.pdf",
+        size: 444360,
+        type: "application/pdf",
+        uploadedAt: "2026-08-17T12:01:50.842Z",
+        dataUrl: "",
+      },
+    ],
   },
   {
-    id: "F-02",
-    name: "Visa Applications",
-    color: pickColor(1).bg,
-    iconColor: pickColor(1).icon,
-    createdAt: "2026-01-15",
-    description: "Submitted and approved visa documents",
-    files: [],
+    id: "F-msjy3cnv",
+    name: "Dipesh",
+    color: "bg-emerald-100 text-emerald-600 border-emerald-200",
+    iconColor: "#10b981",
+    createdAt: "2026-08-08T05:40:36.187Z",
+    description: "Insurance for Dipesh",
     manager: "Pushplata Kriplani",
+    files: [
+      {
+        id: "U-msjy3co2-mjsfy",
+        name: "RJ17GB2093 SHIV YOG GAU SEVA AND GAU SANVARDHAN.pdf",
+        size: 155531,
+        type: "application/pdf",
+        uploadedAt: "2026-08-08T05:40:36.194Z",
+        dataUrl: "",
+      },
+    ],
   },
   {
-    id: "F-03",
-    name: "Travel Insurance",
-    color: pickColor(2).bg,
-    iconColor: pickColor(2).icon,
-    createdAt: "2026-02-03",
-    description: "Insurance certificates and policy PDFs",
-    files: [],
+    id: "F-mshins4z",
+    name: "Rahul ji ",
+    color: "bg-emerald-100 text-emerald-600 border-emerald-200",
+    iconColor: "#10b981",
+    createdAt: "2026-08-06T12:53:03.155Z",
+    description: "Insurance for Rahul ji ",
     manager: "Pushplata Kriplani",
+    files: [
+      {
+        id: "U-0001",
+        name: "Pan Card Manvendra (1).pdf",
+        size: 183400,
+        type: "application/pdf",
+        uploadedAt: "2026-08-06T14:42:08.497Z",
+        dataUrl: "",
+      },
+      {
+        id: "U-mshins5a-oxf3n",
+        name: "RJ22PA6288.pdf",
+        size: 462549,
+        type: "application/pdf",
+        uploadedAt: "2026-08-06T12:53:03.167Z",
+        dataUrl: "",
+      },
+    ],
   },
   {
-    id: "F-04",
-    name: "Hotel Vouchers",
-    color: pickColor(3).bg,
-    iconColor: pickColor(3).icon,
-    createdAt: "2026-02-20",
-    description: "Confirmed booking vouchers for all hotels",
-    files: [],
+    id: "F-mshex70c",
+    name: "Kdrs Public School Gangapur",
+    color: "bg-emerald-100 text-emerald-600 border-emerald-200",
+    iconColor: "#10b981",
+    createdAt: "2026-08-06T11:08:23.868Z",
+    description: "Insurance for Kdrs Public School Gangapur",
     manager: "Pushplata Kriplani",
+    files: [
+      {
+        id: "U-mshex70p-op9gp",
+        name: "RJ25PA4484.pdf",
+        size: 524522,
+        type: "application/pdf",
+        uploadedAt: "2026-08-06T11:08:23.882Z",
+        dataUrl: "",
+      },
+    ],
   },
   {
-    id: "F-05",
-    name: "Flight Tickets",
-    color: pickColor(4).bg,
-    iconColor: pickColor(4).icon,
-    createdAt: "2026-03-05",
-    description: "E-tickets and boarding pass copies",
-    files: [],
+    id: "F-msfngutq",
+    name: "Om Prakash Vishnoi ",
+    color: "bg-emerald-100 text-emerald-600 border-emerald-200",
+    iconColor: "#10b981",
+    createdAt: "2026-08-05T05:32:05.774Z",
+    description: "Insurance for Om Prakash Vishnoi ",
     manager: "Pushplata Kriplani",
+    files: [
+      {
+        id: "U-msfnguum-axgp7",
+        name: "SHRI JAMBHESHWAR VIDHYAPITH SANS.pdf",
+        size: 1534048,
+        type: "application/pdf",
+        uploadedAt: "2026-08-05T05:32:05.807Z",
+        dataUrl: "",
+      },
+      {
+        id: "U-msfnguuo-ffan0",
+        name: "RJ04PA5242 b.jpeg",
+        size: 66398,
+        type: "image/jpeg",
+        uploadedAt: "2026-08-05T05:32:05.809Z",
+        dataUrl: "",
+      },
+      {
+        id: "U-msfnguup-oyqz2",
+        name: "pan card RJ03PA5242.jpeg",
+        size: 72605,
+        type: "image/jpeg",
+        uploadedAt: "2026-08-05T05:32:05.809Z",
+        dataUrl: "",
+      },
+    ],
+  },
+  {
+    id: "F-07",
+    name: "Visa booking",
+    color: "bg-blue-100 text-blue-600 border-blue-200",
+    iconColor: "#3b82f6",
+    createdAt: "2026-06-30",
+    description: "No description",
+    manager: "Pushplata Kriplani",
+    files: [
+      {
+        id: "U-jtv8kml",
+        name: "[jatin jangid] Look My Holidays Brochure 170826.pdf",
+        size: 1158312,
+        type: "application/pdf",
+        uploadedAt: "2026-08-18T06:59:59.401Z",
+        dataUrl: "",
+      },
+    ],
   },
   {
     id: "F-06",
     name: "Tour Itineraries",
-    color: pickColor(5).bg,
-    iconColor: pickColor(5).icon,
+    color: "bg-cyan-100 text-cyan-600 border-cyan-200",
+    iconColor: "#06b6d4",
     createdAt: "2026-03-18",
     description: "Day-wise itinerary PDFs for each package",
-    files: [],
     manager: "Pushplata Kriplani",
+    files: [
+      {
+        id: "U-0002",
+        name: "Thailand - Urvashi Ji.pdf",
+        size: 1912651,
+        type: "application/pdf",
+        uploadedAt: "2026-09-07T07:31:06.083Z",
+        dataUrl: "",
+      },
+      {
+        id: "U-0001",
+        name: "Singapore - Cruise - 02 Apr.docx",
+        size: 56009,
+        type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        uploadedAt: "2026-09-07T07:03:16.117Z",
+        dataUrl: "",
+      },
+    ],
+  },
+  {
+    id: "F-05",
+    name: "Flight Tickets",
+    color: "bg-rose-100 text-rose-600 border-rose-200",
+    iconColor: "#f43f5e",
+    createdAt: "2026-03-05",
+    description: "E-tickets and boarding pass copies",
+    manager: "Pushplata Kriplani",
+    files: [],
+  },
+  {
+    id: "F-04",
+    name: "Hotel Vouchers",
+    color: "bg-emerald-100 text-emerald-600 border-emerald-200",
+    iconColor: "#10b981",
+    createdAt: "2026-02-20",
+    description: "Confirmed booking vouchers for all hotels",
+    manager: "Pushplata Kriplani",
+    files: [],
+  },
+  {
+    id: "F-03",
+    name: "General Insurance",
+    color: "bg-amber-100 text-amber-600 border-amber-200",
+    iconColor: "#f59e0b",
+    createdAt: "2026-02-03",
+    description: "Insurance certificates and policy PDFs",
+    manager: "Pushplata Kriplani",
+    files: [],
+  },
+  {
+    id: "F-02",
+    name: "Visa Applications",
+    color: "bg-violet-100 text-violet-600 border-violet-200",
+    iconColor: "#8b5cf6",
+    createdAt: "2026-01-15",
+    description: "Submitted and approved visa documents",
+    manager: "Pushplata Kriplani",
+    files: [],
+  },
+  {
+    id: "F-01",
+    name: "Passports & IDs",
+    color: "bg-blue-100 text-blue-600 border-blue-200",
+    iconColor: "#3b82f6",
+    createdAt: "2026-01-10",
+    description: "Customer passport scans and ID documents",
+    manager: "Pushplata Kriplani",
+    files: [],
   },
 ];
+
+function getInitialFolders(): FolderItem[] {
+  const cached = loadFromStorage();
+  if (cached && cached.length > 0) return cached;
+  return SEED_FOLDERS;
+}
 
 function Modal({
   open,
@@ -918,8 +1093,16 @@ function FoldersPage() {
   const auth = getAuth();
   const isAdmin = auth?.role === "admin" || auth?.role === "manager";
 
-  // Load from Supabase, fall back to seed
-  const [folders, setFolders] = useSupabaseTable<FolderItem[]>("folders", SEED_FOLDERS);
+  // Load from fast local cache immediately, then sync with Supabase in background
+  const [folders, setFolders] = useSupabaseTable<FolderItem[]>("folders", getInitialFolders());
+
+  // Save lightweight cache to localStorage whenever folders updates
+  useEffect(() => {
+    if (folders && folders.length > 0) {
+      saveToStorage(folders);
+    }
+  }, [folders]);
+
   const [search, setSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const [newName, setNewName] = useState("");
@@ -968,14 +1151,12 @@ function FoldersPage() {
     googleLogin();
   };
 
-  const openFolder = folders.find((f) => f.id === openFolderId) ?? null;
-
-  useEffect(() => {
+  // In-memory grouping without triggering heavy multi-megabyte Supabase sync loops
+  const displayFolders = useMemo(() => {
     let generalInsuranceFolder = folders.find((f) => f.name === "General Insurance");
-    let migrated = false;
-    let newFolders = [...folders];
+    let list = [...folders];
 
-    const legacyFolders = folders.filter(
+    const legacyFolders = list.filter(
       (f) =>
         !f.parentId &&
         f.name !== "General Insurance" &&
@@ -991,33 +1172,31 @@ function FoldersPage() {
     if (legacyFolders.length > 0) {
       if (!generalInsuranceFolder) {
         generalInsuranceFolder = {
-          id: `F-INS-${Date.now().toString(36)}`,
+          id: "F-INS-general",
           name: "General Insurance",
           color: "bg-emerald-100 text-emerald-600 border-emerald-200",
           iconColor: "#10b981",
-          createdAt: new Date().toISOString().slice(0, 10),
+          createdAt: "2026-01-01",
           description: "All General Insurance Documents",
           files: [],
         };
-        newFolders.push(generalInsuranceFolder);
-        migrated = true;
+        list.push(generalInsuranceFolder);
       }
 
-      newFolders = newFolders.map((f) => {
+      list = list.map((f) => {
         if (legacyFolders.some((lf) => lf.id === f.id)) {
-          migrated = true;
           return { ...f, parentId: generalInsuranceFolder!.id };
         }
         return f;
       });
     }
 
-    if (migrated) {
-      setFolders(newFolders);
-    }
-  }, [folders, setFolders]);
+    return list;
+  }, [folders]);
 
-  const filtered = folders.filter(
+  const openFolder = displayFolders.find((f) => f.id === openFolderId) ?? null;
+
+  const filtered = displayFolders.filter(
     (f) =>
       (!f.parentId || f.parentId === openFolderId) &&
       (f?.name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -1122,7 +1301,7 @@ function FoldersPage() {
     );
   }
 
-  const totalFiles = folders.reduce((s, f) => s + f.files.length, 0);
+  const totalFiles = displayFolders.reduce((s, f) => s + f.files.length, 0);
 
   async function handleUploadFolder(e: React.ChangeEvent<HTMLInputElement>) {
     if (!e.target.files || e.target.files.length === 0) return;
@@ -1156,7 +1335,7 @@ function FoldersPage() {
       <div className="mx-auto max-w-5xl space-y-6">
         <FolderDetail
           folder={openFolder}
-          allFolders={folders}
+          allFolders={displayFolders}
           onBack={() => setOpenFolderId(openFolder.parentId || null)}
           onOpenFolder={(f) => setOpenFolderId(f.id)}
           onRenameFolder={handleRename}
@@ -1174,7 +1353,7 @@ function FoldersPage() {
       ["Folder ID", "Folder Name", "Created At", "Description", "Manager", "Number of Files"]
     ];
 
-    folders.forEach(f => {
+    displayFolders.forEach(f => {
       const matchStart = exportStartDate ? f.createdAt >= exportStartDate : true;
       const matchEnd = exportEndDate ? f.createdAt <= exportEndDate : true;
 
@@ -1205,7 +1384,7 @@ function FoldersPage() {
     const tableHeader =
       "<tr><th>Folder ID</th><th>Folder Name</th><th>Manager</th><th>Description</th><th>Files Count</th><th>Created Date</th></tr>";
 
-    const exportableFolders = folders.filter(f => {
+    const exportableFolders = displayFolders.filter(f => {
       const matchStart = exportStartDate ? f.createdAt >= exportStartDate : true;
       const matchEnd = exportEndDate ? f.createdAt <= exportEndDate : true;
       return matchStart && matchEnd;
@@ -1238,7 +1417,7 @@ function FoldersPage() {
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
 
-    const exportableFolders = folders.filter(f => {
+    const exportableFolders = displayFolders.filter(f => {
       const matchStart = exportStartDate ? f.createdAt >= exportStartDate : true;
       const matchEnd = exportEndDate ? f.createdAt <= exportEndDate : true;
       return matchStart && matchEnd;
@@ -1279,7 +1458,7 @@ function FoldersPage() {
         <div>
           <h1 className="font-display text-3xl font-bold">Folders</h1>
           <p className="mt-1 text-sm text-muted-foreground flex items-center gap-1.5">
-            {folders.length} folders · {totalFiles} total files
+            {displayFolders.length} folders · {totalFiles} total files
           </p>
         </div>
         <div className="flex gap-2">
@@ -1331,18 +1510,18 @@ function FoldersPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         {[
-          { label: "Total Folders", value: folders.length, icon: <Folder className="h-4 w-4" /> },
+          { label: "Total Folders", value: displayFolders.length, icon: <Folder className="h-4 w-4" /> },
           { label: "Total Files", value: totalFiles, icon: <File className="h-4 w-4" /> },
           {
             label: "Recent (30d)",
-            value: folders.filter(
+            value: displayFolders.filter(
               (f) => f.createdAt >= new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10),
             ).length,
             icon: <FolderOpen className="h-4 w-4" />,
           },
           {
             label: "Empty Folders",
-            value: folders.filter((f) => f.files.length === 0).length,
+            value: displayFolders.filter((f) => f.files.length === 0).length,
             icon: <Folder className="h-4 w-4" />,
           },
         ].map((s) => (
@@ -1387,7 +1566,7 @@ function FoldersPage() {
               <FolderCard
                 key={folder.id}
                 folder={folder}
-                subfolderCount={folders.filter(sub => sub.parentId === folder.id).length}
+                subfolderCount={displayFolders.filter(sub => sub.parentId === folder.id).length}
                 onRename={handleRename}
                 onDelete={(id) => setDeleteTarget(folder)}
                 onOpen={(f) => setOpenFolderId(f.id)}
