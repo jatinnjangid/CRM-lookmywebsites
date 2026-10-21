@@ -1512,70 +1512,70 @@ function BookingsPage() {
       {/* ===== Dashboard Section ===== */}
       <div className="space-y-6 bg-secondary/10 p-6 rounded-2xl border border-border">
         {/* Row 1: KPI Summary Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-          <div className="bg-card border border-border p-4 rounded-xl shadow-sm flex flex-col gap-1">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Briefcase className="h-4 w-4 text-blue-500" />{" "}
-              <span className="text-xs font-semibold uppercase tracking-wider">Total</span>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-2.5">
+          <div className="bg-card border border-border p-3 rounded-xl shadow-xs flex flex-col gap-1 min-w-0">
+            <div className="flex items-center gap-1.5 text-muted-foreground truncate">
+              <Briefcase className="h-4 w-4 text-blue-500 shrink-0" />{" "}
+              <span className="text-[11px] font-semibold uppercase tracking-wider truncate">Total</span>
             </div>
-            <p className="text-2xl font-bold">{dashboardData.totalBookings}</p>
+            <p className="text-xl xl:text-2xl font-bold truncate">{dashboardData.totalBookings}</p>
           </div>
-          <div className="bg-card border border-border p-4 rounded-xl shadow-sm flex flex-col gap-1">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Plane className="h-4 w-4 text-sky-500" />{" "}
-              <span className="text-xs font-semibold uppercase tracking-wider">Air</span>
+          <div className="bg-card border border-border p-3 rounded-xl shadow-xs flex flex-col gap-1 min-w-0">
+            <div className="flex items-center gap-1.5 text-muted-foreground truncate">
+              <Plane className="h-4 w-4 text-sky-500 shrink-0" />{" "}
+              <span className="text-[11px] font-semibold uppercase tracking-wider truncate">Air</span>
             </div>
-            <p className="text-2xl font-bold">{dashboardData.serviceCounts["Air Ticket"]}</p>
+            <p className="text-xl xl:text-2xl font-bold truncate">{dashboardData.serviceCounts["Air Ticket"]}</p>
           </div>
-          <div className="bg-card border border-border p-4 rounded-xl shadow-sm flex flex-col gap-1">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Train className="h-4 w-4 text-purple-500" />{" "}
-              <span className="text-xs font-semibold uppercase tracking-wider">Train</span>
+          <div className="bg-card border border-border p-3 rounded-xl shadow-xs flex flex-col gap-1 min-w-0">
+            <div className="flex items-center gap-1.5 text-muted-foreground truncate">
+              <Train className="h-4 w-4 text-purple-500 shrink-0" />{" "}
+              <span className="text-[11px] font-semibold uppercase tracking-wider truncate">Train</span>
             </div>
-            <p className="text-2xl font-bold">{dashboardData.serviceCounts["Train Ticket"]}</p>
+            <p className="text-xl xl:text-2xl font-bold truncate">{dashboardData.serviceCounts["Train Ticket"]}</p>
           </div>
-          <div className="bg-card border border-border p-4 rounded-xl shadow-sm flex flex-col gap-1">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Building2 className="h-4 w-4 text-orange-500" />{" "}
-              <span className="text-xs font-semibold uppercase tracking-wider">Hotels</span>
+          <div className="bg-card border border-border p-3 rounded-xl shadow-xs flex flex-col gap-1 min-w-0">
+            <div className="flex items-center gap-1.5 text-muted-foreground truncate">
+              <Building2 className="h-4 w-4 text-orange-500 shrink-0" />{" "}
+              <span className="text-[11px] font-semibold uppercase tracking-wider truncate">Hotels</span>
             </div>
-            <p className="text-2xl font-bold">{dashboardData.serviceCounts["Hotel"]}</p>
+            <p className="text-xl xl:text-2xl font-bold truncate">{dashboardData.serviceCounts["Hotel"]}</p>
           </div>
-          <div className="bg-card border border-border p-4 rounded-xl shadow-sm flex flex-col gap-1">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Map className="h-4 w-4 text-emerald-500" />{" "}
-              <span className="text-xs font-semibold uppercase tracking-wider">Holiday</span>
+          <div className="bg-card border border-border p-3 rounded-xl shadow-xs flex flex-col gap-1 min-w-0">
+            <div className="flex items-center gap-1.5 text-muted-foreground truncate">
+              <Map className="h-4 w-4 text-emerald-500 shrink-0" />{" "}
+              <span className="text-[11px] font-semibold uppercase tracking-wider truncate">Holiday</span>
             </div>
-            <p className="text-2xl font-bold">{dashboardData.serviceCounts["Holiday Package"]}</p>
+            <p className="text-xl xl:text-2xl font-bold truncate">{dashboardData.serviceCounts["Holiday Package"]}</p>
           </div>
-          <div className="bg-card border border-border p-4 rounded-xl shadow-sm flex flex-col gap-1">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Car className="h-4 w-4 text-yellow-500" />{" "}
-              <span className="text-xs font-semibold uppercase tracking-wider">Taxi</span>
+          <div className="bg-card border border-border p-3 rounded-xl shadow-xs flex flex-col gap-1 min-w-0">
+            <div className="flex items-center gap-1.5 text-muted-foreground truncate">
+              <Car className="h-4 w-4 text-yellow-500 shrink-0" />{" "}
+              <span className="text-[11px] font-semibold uppercase tracking-wider truncate">Taxi</span>
             </div>
-            <p className="text-2xl font-bold">{dashboardData.serviceCounts["Taxi"]}</p>
+            <p className="text-xl xl:text-2xl font-bold truncate">{dashboardData.serviceCounts["Taxi"]}</p>
           </div>
-          <div className="bg-card border border-border p-4 rounded-xl shadow-sm flex flex-col gap-1">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <FileText className="h-4 w-4 text-indigo-500" />{" "}
-              <span className="text-xs font-semibold uppercase tracking-wider">Visa</span>
+          <div className="bg-card border border-border p-3 rounded-xl shadow-xs flex flex-col gap-1 min-w-0">
+            <div className="flex items-center gap-1.5 text-muted-foreground truncate">
+              <FileText className="h-4 w-4 text-indigo-500 shrink-0" />{" "}
+              <span className="text-[11px] font-semibold uppercase tracking-wider truncate">Visa</span>
             </div>
-            <p className="text-2xl font-bold">{dashboardData.serviceCounts["Visa"]}</p>
+            <p className="text-xl xl:text-2xl font-bold truncate">{dashboardData.serviceCounts["Visa"]}</p>
           </div>
-          <div className="bg-card border border-border p-4 rounded-xl shadow-sm flex flex-col gap-1">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <ShieldCheck className="h-4 w-4 text-teal-500" />{" "}
-              <span className="text-xs font-semibold uppercase tracking-wider">Insurance</span>
+          <div className="bg-card border border-border p-3 rounded-xl shadow-xs flex flex-col gap-1 min-w-0">
+            <div className="flex items-center gap-1.5 text-muted-foreground truncate">
+              <ShieldCheck className="h-4 w-4 text-teal-500 shrink-0" />{" "}
+              <span className="text-[11px] font-semibold uppercase tracking-wider truncate">Insurance</span>
             </div>
-            <p className="text-2xl font-bold">{dashboardData.serviceCounts["Travel Insurance"]}</p>
+            <p className="text-xl xl:text-2xl font-bold truncate">{dashboardData.serviceCounts["Travel Insurance"]}</p>
           </div>
 
-          <div className="bg-card border border-border p-4 rounded-xl shadow-sm flex flex-col gap-1">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Bus className="h-4 w-4 text-pink-500" />{" "}
-              <span className="text-xs font-semibold uppercase tracking-wider">Bus</span>
+          <div className="bg-card border border-border p-3 rounded-xl shadow-xs flex flex-col gap-1 min-w-0">
+            <div className="flex items-center gap-1.5 text-muted-foreground truncate">
+              <Bus className="h-4 w-4 text-pink-500 shrink-0" />{" "}
+              <span className="text-[11px] font-semibold uppercase tracking-wider truncate">Bus</span>
             </div>
-            <p className="text-2xl font-bold">{dashboardData.serviceCounts["Bus Ticket"]}</p>
+            <p className="text-xl xl:text-2xl font-bold truncate">{dashboardData.serviceCounts["Bus Ticket"]}</p>
           </div>
         </div>
 
@@ -1673,42 +1673,42 @@ function BookingsPage() {
       </div>
 
       {/* Filter and Search Navigation */}
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 py-4 text-sm">
-        <div className="relative w-full sm:w-80">
+      <div className="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-3 py-4 text-sm">
+        <div className="relative w-full lg:w-64 xl:w-72 shrink-0">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
             type="text"
             placeholder="Search bookings by customer, ID, package..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-10 w-full rounded-full border border-border bg-card pl-9 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="h-9 sm:h-10 w-full rounded-full border border-border bg-card pl-9 pr-4 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
         </div>
-        <div className="flex items-center gap-4 flex-wrap justify-end">
-          <div className="flex items-center gap-2">
-            <span className="text-muted-foreground font-medium whitespace-nowrap">From:</span>
+        <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap xl:flex-nowrap justify-start lg:justify-end overflow-x-auto pb-1 sm:pb-0">
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="text-muted-foreground text-xs sm:text-sm font-medium whitespace-nowrap">From:</span>
             <input
               type="date"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
-              className="h-10 rounded-full border border-border bg-card text-foreground px-4 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className="h-9 sm:h-10 rounded-full border border-border bg-card text-foreground px-2.5 sm:px-3 py-1 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 w-[125px] sm:w-[135px]"
             />
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-muted-foreground font-medium whitespace-nowrap">To:</span>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="text-muted-foreground text-xs sm:text-sm font-medium whitespace-nowrap">To:</span>
             <input
               type="date"
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
-              className="h-10 rounded-full border border-border bg-card text-foreground px-4 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className="h-9 sm:h-10 rounded-full border border-border bg-card text-foreground px-2.5 sm:px-3 py-1 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 w-[125px] sm:w-[135px]"
             />
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-muted-foreground font-medium whitespace-nowrap"><Filter className="inline w-4 h-4 mr-1" />Status:</span>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="text-muted-foreground text-xs sm:text-sm font-medium whitespace-nowrap"><Filter className="inline w-3.5 h-3.5 mr-1" />Status:</span>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-10 cursor-pointer appearance-none rounded-full border border-border bg-card text-card-foreground pl-4 pr-9 py-1.5 font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%24%2024%22%20fill%3D%22none%22%20stroke%3D%22%23111827%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-[length:1em_1em] bg-[right_1rem_center] bg-no-repeat"
+              className="h-9 sm:h-10 cursor-pointer appearance-none rounded-full border border-border bg-card text-card-foreground pl-3 pr-7 py-1 text-xs sm:text-sm font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%24%2024%22%20fill%3D%22none%22%20stroke%3D%22%23111827%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-[length:0.85em_0.85em] bg-[right_0.75rem_center] bg-no-repeat"
             >
               <option value="All">All Statuses</option>
               <option value="Confirmed">Confirmed</option>
@@ -1718,12 +1718,12 @@ function BookingsPage() {
               <option value="Refunded">Refunded</option>
             </select>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-muted-foreground font-medium whitespace-nowrap">Category:</span>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="text-muted-foreground text-xs sm:text-sm font-medium whitespace-nowrap">Category:</span>
             <select
               value={activeTab}
               onChange={(e) => setActiveTab(e.target.value)}
-              className="h-10 cursor-pointer appearance-none rounded-full border border-border bg-card text-card-foreground pl-4 pr-9 py-1.5 font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%24%2024%22%20fill%3D%22none%22%20stroke%3D%22%23111827%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-[length:1em_1em] bg-[right_1rem_center] bg-no-repeat"
+              className="h-9 sm:h-10 cursor-pointer appearance-none rounded-full border border-border bg-card text-card-foreground pl-3 pr-7 py-1 text-xs sm:text-sm font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 max-w-[145px] sm:max-w-[160px] truncate bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%24%2024%22%20fill%3D%22none%22%20stroke%3D%22%23111827%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-[length:0.85em_0.85em] bg-[right_0.75rem_center] bg-no-repeat"
             >
               <option value="All">All Categories</option>
               {SERVICES.map((g) => (
@@ -1738,8 +1738,8 @@ function BookingsPage() {
             </select>
           </div>
           {(isAdmin || auth?.name?.toLowerCase().includes("aman")) && (
-            <Button variant="outline" className="rounded-full" onClick={() => setIsExportOpen(true)}>
-              <Download className="w-4 h-4 mr-2" />
+            <Button variant="outline" size="sm" className="h-9 sm:h-10 rounded-full shrink-0 px-3.5" onClick={() => setIsExportOpen(true)}>
+              <Download className="w-4 h-4 mr-1.5" />
               Export
             </Button>
           )}

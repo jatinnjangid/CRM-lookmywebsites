@@ -382,63 +382,65 @@ function GeneralInsurancePage() {
 
       <InsuranceDashboard stats={stats} />
 
-      <div className="flex flex-wrap items-center gap-1 bg-muted/50 p-1 rounded-xl w-fit">
-        <Button
-          variant={activeTab === "Policies" ? "default" : "ghost"}
-          size="sm"
-          className={activeTab === "Policies" ? "bg-card text-foreground shadow-sm rounded-lg" : "text-muted-foreground hover:text-foreground"}
-          onClick={() => setActiveTab("Policies")}
-        >
-          All Policies
-        </Button>
-        <Button
-          variant={activeTab === "Renewals" ? "default" : "ghost"}
-          size="sm"
-          className={activeTab === "Renewals" ? "bg-card text-foreground shadow-sm rounded-lg" : "text-muted-foreground hover:text-foreground"}
-          onClick={() => setActiveTab("Renewals")}
-        >
-          Upcoming Renewals
-        </Button>
-        <Button
-          variant={activeTab === "Vendors" ? "default" : "ghost"}
-          size="sm"
-          className={activeTab === "Vendors" ? "bg-card text-foreground shadow-sm rounded-lg" : "text-muted-foreground hover:text-foreground"}
-          onClick={() => setActiveTab("Vendors")}
-        >
-          Vendors
-        </Button>
-        <Button
-          variant={activeTab === "Companies" ? "default" : "ghost"}
-          size="sm"
-          className={activeTab === "Companies" ? "bg-card text-foreground shadow-sm rounded-lg" : "text-muted-foreground hover:text-foreground"}
-          onClick={() => setActiveTab("Companies")}
-        >
-          Companies
-        </Button>
-        <Button
-          variant={activeTab === "CustomerStatus" ? "default" : "ghost"}
-          size="sm"
-          className={activeTab === "CustomerStatus" ? "bg-card text-foreground shadow-sm rounded-lg" : "text-muted-foreground hover:text-foreground"}
-          onClick={() => setActiveTab("CustomerStatus")}
-        >
-          Customer Status
-        </Button>
-        <Button
-          variant={activeTab === "VendorStatus" ? "default" : "ghost"}
-          size="sm"
-          className={activeTab === "VendorStatus" ? "bg-card text-foreground shadow-sm rounded-lg" : "text-muted-foreground hover:text-foreground"}
-          onClick={() => setActiveTab("VendorStatus")}
-        >
-          Vendor Status
-        </Button>
-        <Button
-          variant={activeTab === "GenTransactions" ? "default" : "ghost"}
-          size="sm"
-          className={activeTab === "GenTransactions" ? "bg-card text-foreground shadow-sm rounded-lg" : "text-muted-foreground hover:text-foreground"}
-          onClick={() => setActiveTab("GenTransactions")}
-        >
-          Gen Transactions
-        </Button>
+      <div className="flex justify-center w-full">
+        <div className="flex flex-wrap items-center justify-center gap-1 bg-muted/50 p-1 rounded-xl w-fit shadow-xs">
+          <Button
+            variant={activeTab === "Policies" ? "default" : "ghost"}
+            size="sm"
+            className={activeTab === "Policies" ? "bg-card text-foreground shadow-sm rounded-lg" : "text-muted-foreground hover:text-foreground"}
+            onClick={() => setActiveTab("Policies")}
+          >
+            All Policies
+          </Button>
+          <Button
+            variant={activeTab === "Renewals" ? "default" : "ghost"}
+            size="sm"
+            className={activeTab === "Renewals" ? "bg-card text-foreground shadow-sm rounded-lg" : "text-muted-foreground hover:text-foreground"}
+            onClick={() => setActiveTab("Renewals")}
+          >
+            Upcoming Renewals
+          </Button>
+          <Button
+            variant={activeTab === "Vendors" ? "default" : "ghost"}
+            size="sm"
+            className={activeTab === "Vendors" ? "bg-card text-foreground shadow-sm rounded-lg" : "text-muted-foreground hover:text-foreground"}
+            onClick={() => setActiveTab("Vendors")}
+          >
+            Vendors
+          </Button>
+          <Button
+            variant={activeTab === "Companies" ? "default" : "ghost"}
+            size="sm"
+            className={activeTab === "Companies" ? "bg-card text-foreground shadow-sm rounded-lg" : "text-muted-foreground hover:text-foreground"}
+            onClick={() => setActiveTab("Companies")}
+          >
+            Companies
+          </Button>
+          <Button
+            variant={activeTab === "CustomerStatus" ? "default" : "ghost"}
+            size="sm"
+            className={activeTab === "CustomerStatus" ? "bg-card text-foreground shadow-sm rounded-lg" : "text-muted-foreground hover:text-foreground"}
+            onClick={() => setActiveTab("CustomerStatus")}
+          >
+            Customer Status
+          </Button>
+          <Button
+            variant={activeTab === "VendorStatus" ? "default" : "ghost"}
+            size="sm"
+            className={activeTab === "VendorStatus" ? "bg-card text-foreground shadow-sm rounded-lg" : "text-muted-foreground hover:text-foreground"}
+            onClick={() => setActiveTab("VendorStatus")}
+          >
+            Vendor Status
+          </Button>
+          <Button
+            variant={activeTab === "GenTransactions" ? "default" : "ghost"}
+            size="sm"
+            className={activeTab === "GenTransactions" ? "bg-card text-foreground shadow-sm rounded-lg" : "text-muted-foreground hover:text-foreground"}
+            onClick={() => setActiveTab("GenTransactions")}
+          >
+            Gen Transactions
+          </Button>
+        </div>
       </div>
 
       <div className="mt-4">

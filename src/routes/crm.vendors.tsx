@@ -619,7 +619,7 @@ function VendorsPage() {
         <div className="flex gap-2">
           {(auth?.role === "admin" || auth?.name?.toLowerCase().includes("aman")) && (
             <Button variant="outline" className="shadow-sm" onClick={() => setIsExportOpen(true)}>
-              <Download className="mr-2 h-4 w-4" /> Export
+              <Download className="mr-2 h-4 w-4" /> Export Vendor
             </Button>
           )}
           <Button onClick={openAdd} className="shadow">

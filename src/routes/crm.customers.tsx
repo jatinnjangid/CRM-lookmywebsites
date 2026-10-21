@@ -397,7 +397,7 @@ function CustomersPage() {
         <div className="flex gap-2 w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0">
           {isAdmin && (
             <Button variant="outline" onClick={() => setIsExportOpen(true)}>
-              <Download className="mr-2 h-4 w-4" /> Export
+              <Download className="mr-2 h-4 w-4" /> Export Customer
             </Button>
           )}
           <Button onClick={() => setIsAddOpen(true)} style={{ background: "var(--gradient-brand)" }} className="text-white shadow-md">

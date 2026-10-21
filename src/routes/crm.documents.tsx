@@ -1467,7 +1467,7 @@ function FoldersPage() {
             variant="outline"
             className="gap-2 rounded-xl text-xs font-semibold h-9 border-border hover:bg-secondary/50 transition-colors"
           >
-            <Download className="h-4 w-4" /> Export
+            <Download className="h-4 w-4" /> Export Folder
           </Button>
           <Button
             onClick={() => setCreateOpen(true)}

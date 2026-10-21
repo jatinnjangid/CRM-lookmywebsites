@@ -328,22 +328,7 @@ export function InsuranceCustomerStatusView({ policies, setPolicies }: { policie
       </div>
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <Input
-            type="date"
-            value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-            className="w-full sm:w-[150px]"
-          />
-          <span className="text-muted-foreground">to</span>
-          <Input
-            type="date"
-            value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
-            className="w-full sm:w-[150px]"
-          />
-        </div>
-        <div className="flex items-center gap-2 w-full sm:w-auto">
+        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
           <div className="relative w-full sm:w-64">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
@@ -353,11 +338,26 @@ export function InsuranceCustomerStatusView({ policies, setPolicies }: { policie
               onChange={(e) => setCustomerSearchQuery(e.target.value)}
             />
           </div>
-          <Button variant="outline" onClick={handleExportCustomerStatus} className="gap-2">
-            <Download className="h-4 w-4" />
-            Export
-          </Button>
+          <div className="flex items-center gap-2">
+            <Input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="w-full sm:w-[140px]"
+            />
+            <span className="text-muted-foreground text-xs">to</span>
+            <Input
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              className="w-full sm:w-[140px]"
+            />
+          </div>
         </div>
+        <Button variant="outline" onClick={handleExportCustomerStatus} className="gap-2 shrink-0">
+          <Download className="h-4 w-4" />
+          Export
+        </Button>
       </div>
 
       <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden">

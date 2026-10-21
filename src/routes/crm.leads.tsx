@@ -2637,13 +2637,13 @@ function LeadsPage() {
           <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-primary text-left text-xs uppercase tracking-wider text-white">
+                <thead className="bg-secondary/60 dark:bg-muted/40 border-b border-border text-left text-xs uppercase tracking-wider text-muted-foreground select-none">
                   <tr>
-                    <th className="px-4 py-4 font-medium">
+                    <th className="px-4 py-3.5 font-semibold text-muted-foreground">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <div className="cursor-pointer hover:text-white/80 transition-colors flex items-center gap-1">
-                            Status {filterStatus !== "All" && <span className="bg-white/20 px-1.5 py-0.5 rounded text-[10px]">{filterStatus}</span>}
+                          <div className="cursor-pointer hover:text-foreground transition-colors flex items-center gap-1">
+                            Status {filterStatus !== "All" && <span className="bg-primary/10 text-primary dark:bg-primary/20 px-1.5 py-0.5 rounded text-[10px] font-bold">{filterStatus}</span>}
                           </div>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="start">
@@ -2654,15 +2654,15 @@ function LeadsPage() {
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </th>
-                    <th className="px-4 py-4 font-medium">Name</th>
-                    <th className="px-4 py-4 font-medium whitespace-nowrap">Create Date & Time</th>
-                    <th className="px-4 py-4 font-medium">Des. / Service</th>
-                    <th className="px-4 py-4 font-medium whitespace-nowrap">Travel Date / Budget</th>
-                    <th className="px-4 py-4 font-medium">
+                    <th className="px-4 py-3.5 font-semibold text-muted-foreground">Name</th>
+                    <th className="px-4 py-3.5 font-semibold text-muted-foreground whitespace-nowrap">Create Date & Time</th>
+                    <th className="px-4 py-3.5 font-semibold text-muted-foreground">Des. / Service</th>
+                    <th className="px-4 py-3.5 font-semibold text-muted-foreground whitespace-nowrap">Travel Date / Budget</th>
+                    <th className="px-4 py-3.5 font-semibold text-muted-foreground">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <div className="cursor-pointer hover:text-white/80 transition-colors flex items-center gap-1">
-                            Priority {filterPriority !== "All" && <span className="bg-white/20 px-1.5 py-0.5 rounded text-[10px]">{filterPriority}</span>}
+                          <div className="cursor-pointer hover:text-foreground transition-colors flex items-center gap-1">
+                            Priority {filterPriority !== "All" && <span className="bg-primary/10 text-primary dark:bg-primary/20 px-1.5 py-0.5 rounded text-[10px] font-bold">{filterPriority}</span>}
                           </div>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="start">
@@ -2673,11 +2673,11 @@ function LeadsPage() {
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </th>
-                    <th className="px-4 py-4 font-medium">
+                    <th className="px-4 py-3.5 font-semibold text-muted-foreground">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <div className="cursor-pointer hover:text-white/80 transition-colors flex items-center gap-1">
-                            Assigned To {filterAssignedTo !== "All" && <span className="bg-white/20 px-1.5 py-0.5 rounded text-[10px] truncate max-w-[80px]">{filterAssignedTo}</span>}
+                          <div className="cursor-pointer hover:text-foreground transition-colors flex items-center gap-1">
+                            Assigned To {filterAssignedTo !== "All" && <span className="bg-primary/10 text-primary dark:bg-primary/20 px-1.5 py-0.5 rounded text-[10px] font-bold truncate max-w-[80px]">{filterAssignedTo}</span>}
                           </div>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="start">

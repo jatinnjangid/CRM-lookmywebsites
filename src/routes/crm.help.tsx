@@ -1324,46 +1324,15 @@ function HelpChatPage() {
                   const prevComm = idx > 0 ? arr[idx - 1] : null;
                   const isSameAuthorAsPrev = prevComm && isCommentFromMe(prevComm) === isMe && prevComm.authorName === comm.authorName;
 
-                  // Never repeat sender header on every alternating bubble: only show on the first appearance of this participant
-                  const prevOtherComm = arr.slice(0, idx).reverse().find(c => !isCommentFromMe(c));
-                  const isSameOtherAuthor = prevOtherComm && prevOtherComm.authorName === comm.authorName;
-                  const showSenderHeader = !isMe && !isSameOtherAuthor;
-
-                  // Initials for avatar
-                  const initials = (comm.authorName || "U")
-                    .split(" ")
-                    .map((n) => n[0])
-                    .filter(Boolean)
-                    .slice(0, 2)
-                    .join("")
-                    .toUpperCase();
-
                   const isCelebration = comm.content.includes("🎉") || comm.content.includes("5 ⭐");
 
                   return (
                     <div
                       key={comm.id}
                       className={`flex flex-col ${isMe ? "items-end ml-auto" : "items-start mr-auto"} max-w-[85%] sm:max-w-[72%] ${
-                        isSameAuthorAsPrev ? "mt-1.5" : "mt-3"
+                        isSameAuthorAsPrev ? "mt-1.5" : "mt-2.5"
                       }`}
                     >
-                      {/* Sender Name & Avatar above Incoming Message (only on first appearance in thread) */}
-                      {showSenderHeader && (
-                        <div className="flex items-center gap-1.5 mb-1 px-1 select-none">
-                          <div className="h-5 w-5 rounded-full bg-blue-500/10 dark:bg-sky-500/15 border border-blue-500/20 dark:border-sky-500/30 text-blue-600 dark:text-[#53bdeb] text-[9px] font-bold flex items-center justify-center shrink-0">
-                            {initials}
-                          </div>
-                          <span className="text-[11px] font-semibold text-slate-700 dark:text-[#53bdeb]">
-                            {comm.authorName}
-                          </span>
-                          {isIT && (
-                            <Badge variant="secondary" className="text-[9px] py-0 px-1.5 font-bold text-blue-600 bg-blue-50 border border-blue-200/60 dark:text-[#53bdeb] dark:bg-sky-500/10 dark:border-sky-500/20">
-                              IT Support
-                            </Badge>
-                          )}
-                        </div>
-                      )}
-
                       {/* Message Bubble */}
                       <div
                         className={`rounded-2xl px-4 py-2.5 text-xs sm:text-[13px] leading-relaxed break-words transition-all ${

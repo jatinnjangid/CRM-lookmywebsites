@@ -1019,19 +1019,19 @@ function AccountsPage() {
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-4 animate-in fade-in duration-300">
+              <div className="relative w-full sm:w-64 md:w-72">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search expenses..."
+                  value={expenseSearchQuery}
+                  onChange={(e) => setExpenseSearchQuery(e.target.value)}
+                  className="pl-9 h-9 w-full rounded-lg shadow-sm"
+                />
+              </div>
               <div className="flex items-center gap-2 ml-auto">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search expenses..."
-                    value={expenseSearchQuery}
-                    onChange={(e) => setExpenseSearchQuery(e.target.value)}
-                    className="pl-9 h-9 w-[200px] md:w-[250px] rounded-lg shadow-sm"
-                  />
-                </div>
                 {isAdmin && (
                   <Button variant="outline" size="sm" onClick={() => setIsExportOpen(true)} className="h-9 shadow-sm">
-                    <Download className="mr-2 h-4 w-4" /> Export
+                    <Download className="mr-2 h-4 w-4" /> Export Expense
                   </Button>
                 )}
                 <Button onClick={() => setIsAddExpenseOpen(true)} className="h-9 shadow-sm">
@@ -1546,18 +1546,16 @@ function AccountsPage() {
         </TabsContent>
 
         <TabsContent value="customer-status" className="space-y-6 mt-6">
-          <div className="flex flex-wrap items-center justify-end gap-4 animate-in fade-in duration-300">
-            <div className="flex items-center gap-2">
-              <div className="relative w-full sm:w-64">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search customers..." className="pl-9 bg-background/50 h-9" value={customerSearchQuery} onChange={(e) => setCustomerSearchQuery(e.target.value)} />
-              </div>
-              {isAdmin && (
-                <Button variant="outline" size="sm" onClick={handleExportCustomerStatus} className="h-9">
-                  <Download className="w-4 h-4 mr-2" /> Export
-                </Button>
-              )}
+          <div className="flex flex-wrap items-center justify-between gap-4 animate-in fade-in duration-300">
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input placeholder="Search customers..." className="pl-9 bg-background/50 h-9" value={customerSearchQuery} onChange={(e) => setCustomerSearchQuery(e.target.value)} />
             </div>
+            {isAdmin && (
+              <Button variant="outline" size="sm" onClick={handleExportCustomerStatus} className="h-9 ml-auto">
+                <Download className="w-4 h-4 mr-2" /> Export
+              </Button>
+            )}
           </div>
 
           <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden animate-in fade-in duration-300">
@@ -1690,18 +1688,16 @@ function AccountsPage() {
         </TabsContent>
 
         <TabsContent value="vendor-status" className="space-y-6 mt-6">
-          <div className="flex flex-wrap items-center justify-end gap-4 animate-in fade-in duration-300">
-            <div className="flex items-center gap-2">
-              <div className="relative w-full sm:w-64">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search vendors..." className="pl-9 bg-background/50 h-9" value={vendorSearchQuery} onChange={(e) => setVendorSearchQuery(e.target.value)} />
-              </div>
-              {isAdmin && (
-                <Button variant="outline" size="sm" onClick={handleExportVendorStatus} className="h-9">
-                  <Download className="w-4 h-4 mr-2" /> Export
-                </Button>
-              )}
+          <div className="flex flex-wrap items-center justify-between gap-4 animate-in fade-in duration-300">
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input placeholder="Search vendors..." className="pl-9 bg-background/50 h-9" value={vendorSearchQuery} onChange={(e) => setVendorSearchQuery(e.target.value)} />
             </div>
+            {isAdmin && (
+              <Button variant="outline" size="sm" onClick={handleExportVendorStatus} className="h-9 ml-auto">
+                <Download className="w-4 h-4 mr-2" /> Export
+              </Button>
+            )}
           </div>
 
           <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden animate-in fade-in duration-300">
