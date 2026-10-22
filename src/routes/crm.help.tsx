@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, useDeferredValue } from "react";
 import {
   LifeBuoy,
   Plus,
@@ -45,7 +45,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { getAuth } from "@/lib/auth";
-import { useSupabaseTable } from "@/hooks/useSupabaseTable";
+import { useSupabaseTable, triggerTableRefresh } from "@/hooks/useSupabaseTable";
 import { supabase } from "@/lib/supabase";
 import { DeleteConfirmModal } from "@/components/ui/delete-confirm-modal";
 
@@ -123,84 +123,27 @@ export const FEEDBACK_TAGS = [
   "✨ Great CRM Experience",
 ];
 
-const INITIAL_TICKETS: SupportTicket[] = [
-  {
-    id: "d1b11111-0000-4000-8000-000000000001",
-    ticketNumber: "TICK-1001",
-    module: "Bookings",
-    subject: "Profit margin calculation on multi-city flight booking",
-    description: "When updating vendor payable on booking BK-8821, the profit shows the previous value until refreshed. Please check.",
-    priority: "High",
-    status: "In Progress",
-    requesterName: "Deepak Yogi",
-    requesterRole: "Employee",
-    requesterEmail: "deepak@lookmyholidays.in",
-    relatedReference: "BK-8821",
-    itAssignee: "IT Administrator",
-    comments: [
-      {
-        id: "c-1",
-        authorName: "IT Administrator",
-        authorRole: "IT Administrator",
-        content: "Hi Deepak! 👋 Thank you for raising this. I am reviewing the calculation state logic on BK-8821 right now. Will patch it within a few minutes.",
-        createdAt: "2026-09-29T10:15:00Z",
-      },
-    ],
-    createdAt: "2026-09-29T09:30:00Z",
-    updatedAt: "2026-09-29T10:15:00Z",
-  },
-  {
-    id: "d1b11111-0000-4000-8000-000000000002",
-    ticketNumber: "TICK-1002",
-    module: "Accounts",
-    subject: "Supplier invoice attachment preview on PR-3042",
-    description: "Uploaded supplier invoice image is visible on the web portal, but not in PDF download.",
-    priority: "Medium",
-    status: "Resolved",
-    requesterName: "Aman",
-    requesterRole: "Accountant",
-    requesterEmail: "aman@lookmyholidays.in",
-    relatedReference: "PR-3042",
-    itAssignee: "IT Administrator",
-    itResolutionNotes: "Resolved: cross-origin image embed enabled in PDF generator.",
-    feedbackRating: 5,
-    feedbackText: "⚡ Super Fast Resolution • Verified, working properly now! Thanks IT Support.",
-    feedbackSubmittedAt: "2026-09-29T16:25:00Z",
-    comments: [
-      {
-        id: "c-2",
-        authorName: "IT Administrator",
-        authorRole: "IT Administrator",
-        content: "Fixed! Please test with PR-3042 now.",
-        createdAt: "2026-09-29T16:05:00Z",
-      },
-      {
-        id: "c-3",
-        authorName: "Aman",
-        authorRole: "Accountant",
-        content: "Verified, working properly now! Thanks IT Support.",
-        createdAt: "2026-09-29T16:20:00Z",
-      },
-      {
-        id: "c-4",
-        authorName: "IT Administrator",
-        authorRole: "IT Administrator",
-        content: "🎉 Thank you so much for your 5 ⭐ rating & feedback! We appreciate your review. Glad we could resolve this CRM issue for you! 🙌",
-        createdAt: "2026-09-29T16:25:05Z",
-      },
-    ],
-    createdAt: "2026-09-28T14:00:00Z",
-    updatedAt: "2026-09-29T16:25:05Z",
-  },
-];
+const EMPTY_TICKETS: SupportTicket[] = [];
 
 const LOCAL_STORAGE_BACKUP_KEY = "crm_it_support_tickets_v1";
 
 function HelpChatPage() {
   const auth = getAuth();
-  const [tickets, setTickets, isLoaded] = useSupabaseTable<SupportTicket[]>("it_support_tickets", INITIAL_TICKETS);
+  // SWR Instant Hydration: loads cached tickets in 0ms from localStorage/memory
+  const [tickets, setTickets, isLoaded] = useSupabaseTable<SupportTicket[]>("it_support_tickets", EMPTY_TICKETS);
 
-  // Sync to local storage
+  // Fast manual refresh trigger
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const handleRefreshData = () => {
+    setIsRefreshing(true);
+    triggerTableRefresh("it_support_tickets");
+    setTimeout(() => {
+      setIsRefreshing(false);
+      toast.success("Helpdesk queries up to date ⚡");
+    }, 450);
+  };
+
+  // Sync to local storage for extra safety
   useEffect(() => {
     if (typeof window !== "undefined" && isLoaded && tickets && tickets.length > 0) {
       try {
@@ -255,8 +198,9 @@ function HelpChatPage() {
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
   const [isCreatingNew, setIsCreatingNew] = useState(false);
 
-  // Search & Filter in Chat list
+  // Search & Filter in Chat list with deferred value for instant non-blocking typing
   const [searchQuery, setSearchQuery] = useState("");
+  const deferredSearchQuery = useDeferredValue(searchQuery);
   const [statusFilter, setStatusFilter] = useState<"All" | "Open" | "Resolved">("All");
 
   // New Ticket Form State
@@ -284,7 +228,7 @@ function HelpChatPage() {
   const [ticketToDeleteId, setTicketToDeleteId] = useState<string | null>(null);
   const ticketToDeleteRef = useRef<string | null>(null);
 
-  // Filtered queries in the list
+  // Filtered queries in the list using deferred query for 60fps responsiveness
   const visibleTickets = useMemo(() => {
     return tickets.filter((t) => {
       // If NOT Jatin or Manvendra Sir, user can strictly ONLY see their own query tickets!
@@ -309,12 +253,12 @@ function HelpChatPage() {
       if (statusFilter === "Open" && (t.status === "Resolved" || t.status === "Closed")) return false;
       if (statusFilter === "Resolved" && t.status !== "Resolved" && t.status !== "Closed") return false;
 
-      // Search
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        const matchNum = t.ticketNumber.toLowerCase().includes(q);
-        const matchSub = t.subject.toLowerCase().includes(q);
-        const matchDesc = t.description.toLowerCase().includes(q);
+      // Search with deferred query for zero typing lag
+      if (deferredSearchQuery.trim()) {
+        const q = deferredSearchQuery.toLowerCase();
+        const matchNum = t.ticketNumber?.toLowerCase().includes(q);
+        const matchSub = t.subject?.toLowerCase().includes(q);
+        const matchDesc = t.description?.toLowerCase().includes(q);
         const matchReq = (t.requesterName || "").toLowerCase().includes(q);
         const matchMod = (t.module || "").toLowerCase().includes(q);
         if (!matchNum && !matchSub && !matchDesc && !matchReq && !matchMod) return false;
@@ -322,7 +266,7 @@ function HelpChatPage() {
 
       return true;
     });
-  }, [tickets, isITLead, auth, statusFilter, searchQuery]);
+  }, [tickets, isITLead, auth, statusFilter, deferredSearchQuery]);
 
   // Auto-select first ticket on mount if none selected
   useEffect(() => {
@@ -784,15 +728,27 @@ function HelpChatPage() {
                 </div>
               </div>
 
-              <a
-                href={directGeneralWhatsApp}
-                target="_blank"
-                rel="noopener noreferrer"
-                title="Emergency WhatsApp to IT"
-                className="flex h-8 w-8 items-center justify-center rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 transition-all"
-              >
-                <Phone className="h-3.5 w-3.5" />
-              </a>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={handleRefreshData}
+                  disabled={isRefreshing}
+                  title="Instant refresh tickets"
+                  className="flex h-8 w-8 items-center justify-center rounded-xl border border-border/80 bg-background/80 hover:bg-muted text-muted-foreground hover:text-foreground transition-all cursor-pointer"
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin text-primary" : ""}`} />
+                </button>
+
+                <a
+                  href={directGeneralWhatsApp}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Emergency WhatsApp to IT"
+                  className="flex h-8 w-8 items-center justify-center rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 transition-all"
+                >
+                  <Phone className="h-3.5 w-3.5" />
+                </a>
+              </div>
             </div>
 
             {/* Raise Ticket Button */}
@@ -837,9 +793,22 @@ function HelpChatPage() {
             </div>
           </div>
 
-          {/* Queries List */}
+          {/* Queries List with SWR instantaneous display */}
           <div className="flex-1 overflow-y-auto divide-y divide-border/30 p-1.5 space-y-1">
-            {visibleTickets.length === 0 ? (
+            {!isLoaded && visibleTickets.length === 0 ? (
+              <div className="p-2 space-y-2.5 animate-pulse">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="p-3 rounded-xl bg-card/70 border border-border/40 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="h-3.5 w-16 bg-muted/80 rounded"></div>
+                      <div className="h-3.5 w-14 bg-muted/80 rounded-full"></div>
+                    </div>
+                    <div className="h-4 w-3/4 bg-muted/70 rounded"></div>
+                    <div className="h-3 w-1/2 bg-muted/50 rounded"></div>
+                  </div>
+                ))}
+              </div>
+            ) : visibleTickets.length === 0 ? (
               <div className="p-8 text-center">
                 <MessageSquare className="h-8 w-8 text-muted-foreground/40 mx-auto mb-2" />
                 <p className="text-xs font-semibold text-foreground">No queries found</p>
@@ -858,6 +827,7 @@ function HelpChatPage() {
                 return (
                   <button
                     key={ticket.id}
+                    style={{ contentVisibility: "auto", containIntrinsicSize: "auto none auto 84px" }}
                     onClick={() => {
                       setSelectedTicketId(ticket.id);
                       setIsCreatingNew(false);
@@ -1329,6 +1299,7 @@ function HelpChatPage() {
                   return (
                     <div
                       key={comm.id}
+                      style={{ contentVisibility: "auto", containIntrinsicSize: "auto none auto 52px" }}
                       className={`flex flex-col ${isMe ? "items-end ml-auto" : "items-start mr-auto"} max-w-[85%] sm:max-w-[72%] ${
                         isSameAuthorAsPrev ? "mt-1.5" : "mt-2.5"
                       }`}

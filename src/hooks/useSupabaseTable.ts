@@ -1,35 +1,209 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 
+// Global in-memory cache holding deserialized rows for instant 0ms tab switches
+const globalMemoryCache = new Map<string, { data: any[]; timestamp: number }>();
+
+// In-flight fetch promises to deduplicate simultaneous requests for the same table
+const inFlightFetches = new Map<string, Promise<any[] | null>>();
+
+// Active subscribers for each table to broadcast updates across components
+const tableSubscribers = new Map<string, Set<(data: any[]) => void>>();
+
+// Fast shallow-array / ID-level comparison to prevent unnecessary layout jumps & re-renders
+function areArraysIdentical(a: any[] | null | undefined, b: any[] | null | undefined): boolean {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    const itemA = a[i];
+    const itemB = b[i];
+    if (!itemA || !itemB) return false;
+    if (itemA.id !== itemB.id) return false;
+    if (itemA.updated_at !== itemB.updated_at) return false;
+    if (itemA.updatedAt !== itemB.updatedAt) return false;
+    if (itemA !== itemB && JSON.stringify(itemA) !== JSON.stringify(itemB)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// Persist helper
+function writeToPersistentCache(tableName: string, data: any[]) {
+  globalMemoryCache.set(tableName, { data, timestamp: Date.now() });
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem(`crm_swr_cache_${tableName}`, JSON.stringify(data));
+    } catch {
+      // ignore storage quota errors
+    }
+  }
+}
+
 /**
- * A drop-in replacement for useLocalStorage that syncs data with Supabase.
- * It does optimistic UI updates and diffs the array to figure out inserts/updates/deletes.
+ * Force a background revalidation for a specific table or all tables.
+ */
+export function revalidateTableCache(tableName?: string) {
+  if (tableName) {
+    globalMemoryCache.delete(tableName);
+    inFlightFetches.delete(tableName);
+  } else {
+    globalMemoryCache.clear();
+    inFlightFetches.clear();
+  }
+}
+
+/**
+ * Trigger an active instant refresh for a specific table across all mounted components.
+ */
+export function triggerTableRefresh(tableName?: string) {
+  if (tableName) {
+    globalMemoryCache.delete(tableName);
+    inFlightFetches.delete(tableName);
+  } else {
+    globalMemoryCache.clear();
+    inFlightFetches.clear();
+  }
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("crm_refresh_table", { detail: { tableName } }));
+  }
+}
+
+/**
+ * A high-performance drop-in replacement for useLocalStorage that syncs data with Supabase.
+ * Features:
+ * - Instant Stale-While-Revalidate (SWR) 0ms hydration from memory and localStorage
+ * - Request deduplication for simultaneous component queries
+ * - Smooth diff-based reconciliation to eliminate layout jumps
+ * - Optimistic UI updates with cross-component broadcasting
  */
 export function useSupabaseTable<T extends Array<any>>(tableName: string, initialValue: T) {
-  const [data, setData] = useState<T>(initialValue);
-  const [isLoaded, setIsLoaded] = useState(false);
-  const lastSyncedData = useRef<T>(initialValue);
+  // SWR: Initialize state with memory cache (0ms) or localStorage (0ms) if available
+  const [data, setData] = useState<T>(() => {
+    // 1. In-memory cache first (0ms instantaneous on tab switch)
+    const mem = globalMemoryCache.get(tableName);
+    if (mem && Array.isArray(mem.data) && mem.data.length > 0) {
+      return mem.data as T;
+    }
+    // 2. LocalStorage cache next (0ms instantaneous on page load / hard refresh)
+    if (typeof window !== "undefined") {
+      try {
+        let cached = localStorage.getItem(`crm_swr_cache_${tableName}`);
+        if (!cached && tableName === "it_support_tickets") {
+          cached = localStorage.getItem("crm_it_support_tickets_v1");
+        }
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            globalMemoryCache.set(tableName, { data: parsed, timestamp: Date.now() });
+            return parsed as T;
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+    return initialValue;
+  });
+
+  const [isLoaded, setIsLoaded] = useState<boolean>(() => {
+    if (globalMemoryCache.has(tableName)) return true;
+    if (typeof window !== "undefined") {
+      try {
+        const cached =
+          localStorage.getItem(`crm_swr_cache_${tableName}`) ||
+          (tableName === "it_support_tickets" ? localStorage.getItem("crm_it_support_tickets_v1") : null);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) return true;
+        }
+      } catch {}
+    }
+    return false;
+  });
+
+  const lastSyncedData = useRef<T>(data);
   const isPendingSync = useRef(false);
 
-  // Fetch initial data
+  // Cross-component table subscription
   useEffect(() => {
-    async function fetchData() {
-      const { data: remoteData, error } = await supabase.from(tableName).select("*").order("id", { ascending: false });
-      if (error) {
-        console.error(`Error fetching ${tableName}:`, error);
-        return;
-      }
-
-      if (remoteData && remoteData.length > 0) {
-        const unsanitized = remoteData.map(unSanitizeRow) as T;
-        lastSyncedData.current = unsanitized;
-        setData(unsanitized);
-      } else {
-        lastSyncedData.current = [] as any;
-        setData([] as any);
-      }
-      setIsLoaded(true);
+    if (!tableSubscribers.has(tableName)) {
+      tableSubscribers.set(tableName, new Set());
     }
+    const listener = (newTableData: any[]) => {
+      setData((prev) => {
+        if (areArraysIdentical(prev, newTableData)) return prev;
+        return newTableData as T;
+      });
+      lastSyncedData.current = newTableData as T;
+    };
+    tableSubscribers.get(tableName)!.add(listener);
+
+    return () => {
+      tableSubscribers.get(tableName)?.delete(listener);
+    };
+  }, [tableName]);
+
+  // Fetch initial data with deduplication & SWR
+  useEffect(() => {
+    let isCancelled = false;
+
+    async function fetchData() {
+      try {
+        if (!inFlightFetches.has(tableName)) {
+          const fetchPromise = supabase
+            .from(tableName)
+            .select("*")
+            .order("id", { ascending: false })
+            .then(({ data: remoteData, error }) => {
+              inFlightFetches.delete(tableName);
+              if (error) {
+                console.error(`Error fetching ${tableName}:`, error);
+                return null;
+              }
+              return remoteData || [];
+            })
+            .catch((err) => {
+              inFlightFetches.delete(tableName);
+              console.error(`Error in ${tableName} fetch:`, err);
+              return null;
+            });
+          inFlightFetches.set(tableName, fetchPromise);
+        }
+
+        const remoteData = await inFlightFetches.get(tableName);
+        if (isCancelled) return;
+
+        if (remoteData) {
+          const unsanitized = remoteData.map(unSanitizeRow) as T;
+          lastSyncedData.current = unsanitized;
+          writeToPersistentCache(tableName, unsanitized);
+
+          setData((prev) => {
+            if (areArraysIdentical(prev, unsanitized)) {
+              return prev; // Zero layout shift, no unnecessary re-render!
+            }
+            return unsanitized;
+          });
+
+          // Notify other mounted components using this table
+          const subs = tableSubscribers.get(tableName);
+          if (subs) {
+            for (const sub of subs) {
+              sub(unsanitized);
+            }
+          }
+        }
+      } catch (err) {
+        console.error(`Fetch exception for ${tableName}:`, err);
+      } finally {
+        if (!isCancelled) {
+          setIsLoaded(true);
+        }
+      }
+    }
+
     fetchData();
 
     // Subscribe to realtime changes
@@ -38,27 +212,48 @@ export function useSupabaseTable<T extends Array<any>>(tableName: string, initia
       .channel(channelId)
       .on("postgres_changes", { event: "*", schema: "public", table: tableName }, (payload) => {
         if (payload.eventType === "INSERT") {
+          const newRow = unSanitizeRow(payload.new);
           setData((prev) => {
-            if (prev.some((item: any) => item.id === payload.new.id)) return prev;
-            return [...prev, unSanitizeRow(payload.new) as any] as T;
+            if (prev.some((item: any) => item.id === newRow.id)) return prev;
+            const next = [newRow, ...prev] as T;
+            writeToPersistentCache(tableName, next);
+            return next;
           });
         } else if (payload.eventType === "DELETE") {
-          setData((prev) => prev.filter((item: any) => item.id !== payload.old.id) as T);
+          setData((prev) => {
+            const next = prev.filter((item: any) => item.id !== payload.old.id) as T;
+            writeToPersistentCache(tableName, next);
+            return next;
+          });
         } else if (payload.eventType === "UPDATE") {
           // Skip realtime UPDATE echo if we have a pending local sync
-          // (this prevents the server bounce-back from overwriting optimistic UI updates)
           if (isPendingSync.current) return;
-          setData(
-            (prev) =>
-              prev.map((item: any) =>
-                item.id === payload.new.id ? unSanitizeRow(payload.new) : item,
-              ) as T,
-          );
+          const updatedRow = unSanitizeRow(payload.new);
+          setData((prev) => {
+            const next = prev.map((item: any) =>
+              item.id === updatedRow.id ? updatedRow : item,
+            ) as T;
+            writeToPersistentCache(tableName, next);
+            return next;
+          });
         }
       })
       .subscribe();
 
+    const handleForceRefresh = (e: any) => {
+      if (!e.detail || e.detail.tableName === tableName) {
+        fetchData();
+      }
+    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("crm_refresh_table", handleForceRefresh);
+    }
+
     return () => {
+      isCancelled = true;
+      if (typeof window !== "undefined") {
+        window.removeEventListener("crm_refresh_table", handleForceRefresh);
+      }
       supabase.removeChannel(channel);
     };
   }, [tableName]);
@@ -1025,9 +1220,19 @@ export function useSupabaseTable<T extends Array<any>>(tableName: string, initia
   const setSupabaseData = useCallback(
     (value: T | ((val: T) => T)) => {
       isPendingSync.current = true;
-      setData(value);
+      setData((prev) => {
+        const next = typeof value === "function" ? (value as any)(prev) : value;
+        writeToPersistentCache(tableName, next);
+        const subs = tableSubscribers.get(tableName);
+        if (subs) {
+          for (const sub of subs) {
+            sub(next);
+          }
+        }
+        return next;
+      });
     },
-    [],
+    [tableName],
   );
 
   // Sync mutations to Supabase when data changes
