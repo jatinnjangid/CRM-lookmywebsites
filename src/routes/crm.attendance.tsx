@@ -237,7 +237,18 @@ function AttendancePage() {
   const [leaveSearch, setLeaveSearch] = useState("");
   const currentMonthStr = todayStr.substring(0, 7);
   const [kpiMonth, setKpiMonth] = useState(currentMonthStr);
-  const myTodayRecords = [...attendance.filter(a => a.employeeid === myEmpId && a.date === todayStr)].sort((a, b) => (b.checkin || "").localeCompare(a.checkin || ""));
+  const isMatchingMyEmp = useCallback((a: any) => {
+    if (!a) return false;
+    const aEmpId = a.employeeid || a.employee_id;
+    if (aEmpId && aEmpId === myEmpId) return true;
+    if (meInDb && (aEmpId === meInDb.id || aEmpId === meInDb.empId)) return true;
+    if (user?.name && a.employee_name && a.employee_name.toLowerCase().trim() === user.name.toLowerCase().trim()) return true;
+    return false;
+  }, [myEmpId, meInDb, user]);
+
+  const myTodayRecords = useMemo(() => {
+    return [...attendance.filter(a => isMatchingMyEmp(a) && a.date === todayStr)].sort((a, b) => (b.checkin || "").localeCompare(a.checkin || ""));
+  }, [attendance, isMatchingMyEmp, todayStr]);
   const myCurrentSession = myTodayRecords.find(a => !a.checkout);
 
   const isMatchingEmpLeave = useCallback((l: any, empId: string) => {
@@ -435,15 +446,19 @@ function AttendancePage() {
   };
 
   const handleDeleteRecord = (id: string) => {
-    setAttendance(rawAttendance.filter(a => a.id !== id));
+    setAttendance((prev: any[]) => prev.filter(a => a.id !== id));
     toast.success("Attendance record removed!");
   };
 
   const handleToggleClock = () => {
     const formattedTimeStr = time.toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit" });
     if (isClockedIn && myCurrentSession) {
-      setAttendance(
-        rawAttendance.map(a => (a.id === myCurrentSession.id || (a.employeeid === myEmpId && a.date === todayStr && !a.checkout)) ? { ...a, checkout: formattedTimeStr, status: "Present" } : a)
+      setAttendance((prev: any[]) =>
+        prev.map((a: any) =>
+          (a.id === myCurrentSession.id || (isMatchingMyEmp(a) && a.date === todayStr && !a.checkout))
+            ? { ...a, checkout: formattedTimeStr, status: "Present" }
+            : a
+        )
       );
       toast.success(`Successfully Clocked Out at ${formatTime12Hour(formattedTimeStr)}!`);
     } else {
@@ -460,7 +475,7 @@ function AttendancePage() {
         location: "JTM Mall Office",
         note: shiftNote.trim() || undefined,
       };
-      setAttendance([...rawAttendance, newRecord]);
+      setAttendance((prev: any[]) => [newRecord, ...prev]);
       setShiftNote("");
       toast.success(`Successfully Clocked In at ${formatTime12Hour(formattedTimeStr)}!`);
     }

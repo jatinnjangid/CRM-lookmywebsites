@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 
@@ -8,7 +9,8 @@ const globalMemoryCache = new Map<string, { data: any[]; timestamp: number }>();
 const inFlightFetches = new Map<string, Promise<any[] | null>>();
 
 // Active subscribers for each table to broadcast updates across components
-const tableSubscribers = new Map<string, Set<(data: any[]) => void>>();
+type TableSubscriber = (data: any[], originId: string) => void;
+const tableSubscribers = new Map<string, Set<TableSubscriber>>();
 
 // Fast shallow-array / ID-level comparison to prevent unnecessary layout jumps & re-renders
 function areArraysIdentical(a: any[] | null | undefined, b: any[] | null | undefined): boolean {
@@ -125,13 +127,19 @@ export function useSupabaseTable<T extends Array<any>>(tableName: string, initia
 
   const lastSyncedData = useRef<T>(data);
   const isPendingSync = useRef(false);
+  const instanceId = useRef(Math.random().toString(36).slice(2)).current;
 
   // Cross-component table subscription
   useEffect(() => {
     if (!tableSubscribers.has(tableName)) {
       tableSubscribers.set(tableName, new Set());
     }
-    const listener = (newTableData: any[]) => {
+    const listener: TableSubscriber = (newTableData: any[], originId: string) => {
+      // 1. Ignore updates that originated from this instance
+      if (originId === instanceId) return;
+      // 2. Ignore if this instance has a mutation currently syncing
+      if (isPendingSync.current) return;
+
       setData((prev) => {
         if (areArraysIdentical(prev, newTableData)) return prev;
         return newTableData as T;
@@ -143,7 +151,7 @@ export function useSupabaseTable<T extends Array<any>>(tableName: string, initia
     return () => {
       tableSubscribers.get(tableName)?.delete(listener);
     };
-  }, [tableName]);
+  }, [tableName, instanceId]);
 
   // Fetch initial data with deduplication & SWR
   useEffect(() => {
@@ -152,23 +160,24 @@ export function useSupabaseTable<T extends Array<any>>(tableName: string, initia
     async function fetchData() {
       try {
         if (!inFlightFetches.has(tableName)) {
-          const fetchPromise = supabase
-            .from(tableName)
-            .select("*")
-            .order("id", { ascending: false })
-            .then(({ data: remoteData, error }) => {
+          const fetchPromise = (async () => {
+            try {
+              const { data: remoteData, error } = await supabase
+                .from(tableName)
+                .select("*")
+                .order("id", { ascending: false });
               inFlightFetches.delete(tableName);
               if (error) {
                 console.error(`Error fetching ${tableName}:`, error);
                 return null;
               }
-              return remoteData || [];
-            })
-            .catch((err) => {
+              return (remoteData || []) as any[];
+            } catch (err: any) {
               inFlightFetches.delete(tableName);
               console.error(`Error in ${tableName} fetch:`, err);
               return null;
-            });
+            }
+          })();
           inFlightFetches.set(tableName, fetchPromise);
         }
 
@@ -177,21 +186,24 @@ export function useSupabaseTable<T extends Array<any>>(tableName: string, initia
 
         if (remoteData) {
           const unsanitized = remoteData.map(unSanitizeRow) as T;
-          lastSyncedData.current = unsanitized;
-          writeToPersistentCache(tableName, unsanitized);
+          // Protect pending sync from being clobbered by background fetch
+          if (!isPendingSync.current) {
+            lastSyncedData.current = unsanitized;
+            writeToPersistentCache(tableName, unsanitized);
 
-          setData((prev) => {
-            if (areArraysIdentical(prev, unsanitized)) {
-              return prev; // Zero layout shift, no unnecessary re-render!
-            }
-            return unsanitized;
-          });
+            setData((prev) => {
+              if (areArraysIdentical(prev, unsanitized)) {
+                return prev; // Zero layout shift, no unnecessary re-render!
+              }
+              return unsanitized;
+            });
 
-          // Notify other mounted components using this table
-          const subs = tableSubscribers.get(tableName);
-          if (subs) {
-            for (const sub of subs) {
-              sub(unsanitized);
+            // Notify other mounted components using this table
+            const subs = tableSubscribers.get(tableName);
+            if (subs) {
+              for (const sub of subs) {
+                sub(unsanitized, instanceId);
+              }
             }
           }
         }
@@ -1160,6 +1172,19 @@ export function useSupabaseTable<T extends Array<any>>(tableName: string, initia
             });
           }
         }
+
+        // Fallback for attendance INSERT
+        if (tableName === "attendance" && (error.message?.includes("column") || error.code === "42703" || error.code === "PGRST204" || error.message?.includes("checkout"))) {
+          console.warn("[attendance] Retrying INSERT with fallback columns...");
+          const fallbackRows = toInsert.map((row: any) => {
+            const safe = { ...row };
+            if (safe.checkout === "") safe.checkout = null;
+            return safe;
+          });
+          const { error: err2, data: data2 } = await supabase.from(tableName).insert(fallbackRows).select();
+          if (err2) console.error("[attendance] Fallback INSERT failed:", err2.message);
+          else console.log("[attendance] Fallback INSERT success:", data2);
+        }
       } else if (data && data.length > 0) {
         console.log(`[${tableName}] INSERT success:`, data);
         const unsanitized = data.map(unSanitizeRow);
@@ -1211,6 +1236,14 @@ export function useSupabaseTable<T extends Array<any>>(tableName: string, initia
           if (err2) console.error("[it_support_tickets] Fallback UPDATE failed:", err2.message);
         }
 
+        // Fallback for attendance UPDATE
+        if (tableName === "attendance" && (error.message?.includes("column") || error.code === "42703" || error.code === "PGRST204" || error.message?.includes("checkout"))) {
+          const safe = { ...item };
+          if (safe.checkout === "") safe.checkout = null;
+          const { error: err2 } = await supabase.from(tableName).update(safe).eq("id", item.id);
+          if (err2) console.error("[attendance] Fallback UPDATE failed:", err2.message);
+        }
+
       } else {
         console.log(`[${tableName}] UPDATE success:`, data);
       }
@@ -1220,24 +1253,31 @@ export function useSupabaseTable<T extends Array<any>>(tableName: string, initia
   const setSupabaseData = useCallback(
     (value: T | ((val: T) => T)) => {
       isPendingSync.current = true;
+      let nextData: T | undefined;
       setData((prev) => {
         const next = typeof value === "function" ? (value as any)(prev) : value;
+        nextData = next;
         writeToPersistentCache(tableName, next);
-        const subs = tableSubscribers.get(tableName);
-        if (subs) {
-          for (const sub of subs) {
-            sub(next);
-          }
-        }
         return next;
       });
+
+      // Broadcast asynchronously to OTHER mounted components (never self-notify!)
+      queueMicrotask(() => {
+        if (nextData) {
+          const subs = tableSubscribers.get(tableName);
+          if (subs) {
+            for (const sub of subs) {
+              sub(nextData, instanceId);
+            }
+          }
+        }
+      });
     },
-    [tableName],
+    [tableName, instanceId],
   );
 
   // Sync mutations to Supabase when data changes
   useEffect(() => {
-    if (!isLoaded) return;
     if (isPendingSync.current) {
       const oldData = lastSyncedData.current;
       lastSyncedData.current = data;
@@ -1252,7 +1292,7 @@ export function useSupabaseTable<T extends Array<any>>(tableName: string, initia
       // Realtime update or initial load
       lastSyncedData.current = data;
     }
-  }, [data, isLoaded, tableName]);
+  }, [data, tableName]);
 
   return [data, setSupabaseData, isLoaded] as const;
 }

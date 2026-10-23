@@ -17,7 +17,6 @@ import {
   Paperclip,
   Check,
   CheckCheck,
-  RefreshCw,
   Trash2,
   CalendarCheck,
   CreditCard,
@@ -45,7 +44,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { getAuth } from "@/lib/auth";
-import { useSupabaseTable, triggerTableRefresh } from "@/hooks/useSupabaseTable";
+import { useSupabaseTable } from "@/hooks/useSupabaseTable";
 import { supabase } from "@/lib/supabase";
 import { DeleteConfirmModal } from "@/components/ui/delete-confirm-modal";
 
@@ -131,17 +130,6 @@ function HelpChatPage() {
   const auth = getAuth();
   // SWR Instant Hydration: loads cached tickets in 0ms from localStorage/memory
   const [tickets, setTickets, isLoaded] = useSupabaseTable<SupportTicket[]>("it_support_tickets", EMPTY_TICKETS);
-
-  // Fast manual refresh trigger
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const handleRefreshData = () => {
-    setIsRefreshing(true);
-    triggerTableRefresh("it_support_tickets");
-    setTimeout(() => {
-      setIsRefreshing(false);
-      toast.success("Helpdesk queries up to date ⚡");
-    }, 450);
-  };
 
   // Sync to local storage for extra safety
   useEffect(() => {
@@ -729,16 +717,6 @@ function HelpChatPage() {
               </div>
 
               <div className="flex items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={handleRefreshData}
-                  disabled={isRefreshing}
-                  title="Instant refresh tickets"
-                  className="flex h-8 w-8 items-center justify-center rounded-xl border border-border/80 bg-background/80 hover:bg-muted text-muted-foreground hover:text-foreground transition-all cursor-pointer"
-                >
-                  <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin text-primary" : ""}`} />
-                </button>
-
                 <a
                   href={directGeneralWhatsApp}
                   target="_blank"
