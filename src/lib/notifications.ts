@@ -11,6 +11,7 @@ export interface NotificationPreferences {
   systemUpdates: boolean;
   emailDigest: boolean;
   whatsapp: boolean;
+  soundEnabled: boolean;
 }
 
 export const DEFAULT_PREFERENCES: NotificationPreferences = {
@@ -21,6 +22,7 @@ export const DEFAULT_PREFERENCES: NotificationPreferences = {
   systemUpdates: true,
   emailDigest: true,
   whatsapp: false,
+  soundEnabled: true,
 };
 
 export interface AppNotification {
@@ -355,37 +357,125 @@ export function clearAllNotifications() {
   window.dispatchEvent(new CustomEvent(EVENT_KEY));
 }
 
-function playNotificationChime() {
+// Pre-loaded HTML5 Audio element for instantaneous playback
+let preloadedAudio: HTMLAudioElement | null = null;
+
+function getAudioElement(): HTMLAudioElement | null {
+  try {
+    if (typeof window === "undefined") return null;
+    if (!preloadedAudio) {
+      preloadedAudio = new Audio("/notification.wav");
+      preloadedAudio.volume = 0.85;
+      preloadedAudio.preload = "auto";
+    }
+    return preloadedAudio;
+  } catch {
+    return null;
+  }
+}
+
+// Shared AudioContext and auto-unlock for modern browser autoplay policies
+let sharedAudioCtx: AudioContext | null = null;
+
+function getSharedAudioContext(): AudioContext | null {
   try {
     const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioCtx) return;
-    const ctx = new AudioCtx();
-    const now = ctx.currentTime;
-
-    const osc1 = ctx.createOscillator();
-    const gain1 = ctx.createGain();
-    osc1.type = "sine";
-    osc1.frequency.setValueAtTime(659.25, now); // E5
-    gain1.gain.setValueAtTime(0.08, now);
-    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
-    osc1.connect(gain1);
-    gain1.connect(ctx.destination);
-    osc1.start(now);
-    osc1.stop(now + 0.3);
-
-    const osc2 = ctx.createOscillator();
-    const gain2 = ctx.createGain();
-    osc2.type = "sine";
-    osc2.frequency.setValueAtTime(987.77, now + 0.1); // B5
-    gain2.gain.setValueAtTime(0.1, now + 0.1);
-    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
-    osc2.connect(gain2);
-    gain2.connect(ctx.destination);
-    osc2.start(now + 0.1);
-    osc2.stop(now + 0.5);
-  } catch (e) {
-    // Safe ignore audio policy errors
+    if (!AudioCtx) return null;
+    if (!sharedAudioCtx || sharedAudioCtx.state === "closed") {
+      sharedAudioCtx = new AudioCtx();
+    }
+    return sharedAudioCtx;
+  } catch {
+    return null;
   }
+}
+
+if (typeof window !== "undefined") {
+  const unlockAudio = () => {
+    try {
+      // Warm up HTML5 Audio
+      const audio = getAudioElement();
+      if (audio) {
+        audio.load();
+      }
+      // Warm up Web Audio
+      const ctx = getSharedAudioContext();
+      if (ctx && ctx.state === "suspended") {
+        ctx.resume().catch(() => {});
+      }
+    } catch {}
+    window.removeEventListener("pointerdown", unlockAudio);
+    window.removeEventListener("keydown", unlockAudio);
+    window.removeEventListener("touchstart", unlockAudio);
+  };
+  window.addEventListener("pointerdown", unlockAudio, { passive: true });
+  window.addEventListener("keydown", unlockAudio, { passive: true });
+  window.addEventListener("touchstart", unlockAudio, { passive: true });
+}
+
+function playWebAudioOscillatorChime() {
+  try {
+    const ctx = getSharedAudioContext();
+    if (!ctx) return;
+
+    const playTones = () => {
+      const now = ctx.currentTime + 0.02; // Small buffer to prevent scheduling drops
+
+      // Bright, harmonious 3-note chime (G5 -> C6 -> E6)
+      const notes = [
+        { freq: 783.99, start: 0.00, dur: 0.22, vol: 0.35 }, // G5
+        { freq: 1046.50, start: 0.11, dur: 0.26, vol: 0.40 }, // C6
+        { freq: 1318.51, start: 0.22, dur: 0.55, vol: 0.45 }, // E6
+      ];
+
+      notes.forEach(({ freq, start, dur, vol }) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(freq, now + start);
+
+        gain.gain.setValueAtTime(0.001, now + start);
+        gain.gain.linearRampToValueAtTime(vol, now + start + 0.015);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + start + dur);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(now + start);
+        osc.stop(now + start + dur + 0.05);
+      });
+    };
+
+    if (ctx.state === "suspended") {
+      ctx.resume().then(() => playTones()).catch(() => {});
+    } else {
+      playTones();
+    }
+  } catch (e) {}
+}
+
+export function playNotificationChime() {
+  try {
+    // 1. Primary: HTML5 Audio with preloaded notification.wav
+    const audio = getAudioElement();
+    if (audio) {
+      audio.currentTime = 0;
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          // Fallback to Web Audio synthesis if autoplay policy restricts
+          playWebAudioOscillatorChime();
+        });
+        return;
+      }
+    }
+  } catch {
+    // Fallback
+  }
+
+  // 2. Fallback: Web Audio API synthesis
+  playWebAudioOscillatorChime();
 }
 
 /**
@@ -415,8 +505,10 @@ function handleIncomingRealtimeNotification(notif: AppNotification) {
   } catch (e) {}
   window.dispatchEvent(new CustomEvent(EVENT_KEY));
 
-  // Play subtle sound chime
-  playNotificationChime();
+  // Play real-time notification chime if sound alerts are enabled
+  if (prefs.soundEnabled !== false) {
+    playNotificationChime();
+  }
 
   // Show a real-time bubble toast notification on the window
   toast(notif.title, {

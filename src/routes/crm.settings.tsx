@@ -38,6 +38,7 @@ import {
   Activity,
   Laptop,
   CheckCheck,
+  Volume2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,6 +50,7 @@ import {
   saveStoredPreferences,
   DEFAULT_PREFERENCES,
   type NotificationPreferences,
+  playNotificationChime,
 } from "@/lib/notifications";
 import { toast as sonnerToast } from "sonner";
 
@@ -1091,6 +1093,54 @@ function SettingsPage() {
           <div className="space-y-6 animate-in fade-in duration-200">
             <SectionCard title="In-App CRM Notifications" subtitle="Real-time alerts delivered right to your notification drawer">
               <div className="divide-y divide-border/30">
+                <div className="flex items-center justify-between py-3.5 border-b border-border/50 hover:bg-muted/10 px-2 rounded-xl transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                      <Volume2 className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Real-Time Sound Alert</p>
+                      <p className="text-xs text-muted-foreground">
+                        Play a distinct chime alert whenever leads, tasks, bookings, or updates arrive in real-time
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        playNotificationChime();
+                        sonnerToast.success("🔊 Real-time chime played!");
+                      }}
+                      className="h-8 rounded-lg text-xs gap-1.5 px-2.5 font-medium border-border/70 text-foreground hover:bg-primary/10 hover:text-primary transition-colors cursor-pointer"
+                    >
+                      <Volume2 className="h-3.5 w-3.5" />
+                      <span>Play Preview</span>
+                    </Button>
+                    <button
+                      type="button"
+                      aria-label="Toggle real-time sound alert"
+                      onClick={() => {
+                        const next = notifPreferences.soundEnabled === false;
+                        handleUpdatePreferences({ ...notifPreferences, soundEnabled: next });
+                        if (next) {
+                          playNotificationChime();
+                        }
+                      }}
+                      className={`relative h-6 w-11 rounded-full border transition-all cursor-pointer ${
+                        notifPreferences.soundEnabled !== false ? "bg-primary border-primary shadow-xs" : "bg-muted border-border"
+                      }`}
+                    >
+                      <span
+                        className={`block h-5 w-5 rounded-full bg-white shadow-md transition-transform ${
+                          notifPreferences.soundEnabled !== false ? "translate-x-5" : "translate-x-0.5"
+                        }`}
+                      />
+                    </button>
+                  </div>
+                </div>
                 <ToggleRow
                   label="Lead Assigned to Me"
                   sub="Instant alert when incoming holiday leads are routed to your desk"
@@ -1141,40 +1191,27 @@ function SettingsPage() {
               </div>
             </SectionCard>
 
-            <div className="flex items-center justify-between gap-3 pt-2">
+            <div className="flex items-center justify-end gap-2 pt-2">
               <Button
                 variant="outline"
-                className="rounded-xl text-xs h-9 gap-1.5"
+                className="rounded-xl text-xs h-9"
                 onClick={() => {
-                  sonnerToast("🔔 Notification Ping Test: CRM alerts are active and running!");
+                  handleUpdatePreferences(DEFAULT_PREFERENCES);
+                  showToast("Notification defaults restored.");
                 }}
               >
-                <Bell className="h-3.5 w-3.5" />
-                <span>Test Alert Sound & Toast</span>
+                Reset
               </Button>
-
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  className="rounded-xl text-xs h-9"
-                  onClick={() => {
-                    handleUpdatePreferences(DEFAULT_PREFERENCES);
-                    showToast("Notification defaults restored.");
-                  }}
-                >
-                  Reset
-                </Button>
-                <Button
-                  className="rounded-xl text-xs h-9 gap-1.5 shadow-sm"
-                  onClick={() => {
-                    saveStoredPreferences(notifPreferences);
-                    showToast("Notification preferences updated!");
-                  }}
-                >
-                  <Save className="h-3.5 w-3.5" />
-                  <span>Save Preferences</span>
-                </Button>
-              </div>
+              <Button
+                className="rounded-xl text-xs h-9 gap-1.5 shadow-sm"
+                onClick={() => {
+                  saveStoredPreferences(notifPreferences);
+                  showToast("Notification preferences updated!");
+                }}
+              >
+                <Save className="h-3.5 w-3.5" />
+                <span>Save Preferences</span>
+              </Button>
             </div>
           </div>
         );
@@ -1331,36 +1368,6 @@ function SettingsPage() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-10">
-      {/* Top Header Card */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-3xl border border-border/80 bg-card shadow-xs">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-              Settings & Preferences
-            </h1>
-            <Badge variant="outline" className="text-[11px] font-semibold text-primary border-primary/30 bg-primary/5">
-              LookMyHolidays
-            </Badge>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Configure system themes, corporate banking info, security authentication, and data performance.
-          </p>
-        </div>
-
-        {/* User Pill */}
-        <div className="flex items-center gap-2.5 self-start sm:self-center">
-          <div className="flex items-center gap-2.5 pl-3 pr-4 py-1.5 rounded-full border border-border/70 bg-muted/30">
-            <div className="h-7 w-7 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
-              {auth?.name?.[0]?.toUpperCase() || "U"}
-            </div>
-            <div className="text-left">
-              <p className="text-xs font-bold leading-tight text-foreground">{auth?.name || "Staff Member"}</p>
-              <p className="text-[10px] text-muted-foreground capitalize">{auth?.role || "Employee"}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Main 2-Column Split: Tabs Sidebar (Left) + Active Tab View (Right) */}
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Sidebar Navigation */}

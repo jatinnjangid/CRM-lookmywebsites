@@ -61,6 +61,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import logoImg from "../assets/Logo.svg";
 
 export const Route = createFileRoute("/crm")({
@@ -287,22 +293,40 @@ function CrmLayout() {
       <aside
         className={`print:hidden sticky top-0 hidden h-screen ${isCompact ? "w-20" : "w-64"} shrink-0 flex-col border-r border-border bg-sidebar p-4 lg:flex transition-all duration-300`}
       >
-        <Link
-          to="/crm"
-          className={`mb-6 flex items-center ${isCompact ? "justify-center" : "px-2"}`}
-        >
-          {isCompact ? (
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#3b9f4e] text-white shadow-sm">
-              <span className="font-display font-bold text-2xl italic pr-1">H</span>
-            </div>
-          ) : (
+        {isCompact ? (
+          <TooltipProvider delayDuration={40}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link
+                  to="/crm"
+                  className="mb-6 flex items-center justify-center cursor-pointer"
+                >
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#3b9f4e] text-white shadow-sm hover:scale-105 transition-transform">
+                    <span className="font-display font-bold text-2xl italic pr-1">H</span>
+                  </div>
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent
+                side="right"
+                sideOffset={14}
+                className="z-50 px-3 py-1.5 text-xs font-semibold rounded-xl bg-popover text-popover-foreground border border-border/80 shadow-2xl backdrop-blur-md animate-in fade-in-0 zoom-in-95 pointer-events-none"
+              >
+                LookMyHolidays Dashboard
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        ) : (
+          <Link
+            to="/crm"
+            className="mb-6 flex items-center px-2 cursor-pointer"
+          >
             <img
               src={logoImg}
               alt="LookMyHolidays"
               className="h-12 w-auto dark:brightness-0 dark:invert transition-all"
             />
-          )}
-        </Link>
+          </Link>
+        )}
 
         {/* Role badge */}
         {!isCompact && (
@@ -325,82 +349,126 @@ function CrmLayout() {
           </div>
         )}
 
-        <nav className="flex-1 space-y-0.5 overflow-y-auto">
-          {nav.map((n) => {
-            const active = n.exact ? pathname === n.to : pathname.startsWith(n.to.split('?')[0]);
-            const Icon = n.icon;
+        <TooltipProvider delayDuration={40}>
+          <nav className="flex-1 space-y-0.5 overflow-y-auto">
+            {nav.map((n) => {
+              const active = n.exact ? pathname === n.to : pathname.startsWith(n.to.split('?')[0]);
+              const Icon = n.icon;
 
-            if (n.subItems && n.subItems.length > 0) {
-              const isSubActive = n.subItems.some((sub) => pathname.startsWith(sub.to.split('?')[0]));
-              return (
-                <HoverCard key={n.to} openDelay={100} closeDelay={200}>
-                  <HoverCardTrigger asChild>
-                    <button
-                      title={isCompact ? n.label : undefined}
-                      className={`group w-full flex items-center justify-between ${isCompact ? "justify-center p-3" : "gap-3 px-4 py-2.5"} rounded-full text-sm font-medium transition-all duration-300 ease-out hover:translate-x-1.5 cursor-pointer ${active || isSubActive
-                        ? "bg-primary/10 text-primary"
-                        : "text-sidebar-foreground hover:bg-sidebar-accent"
-                        }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <Icon className={`${isCompact ? "h-6 w-6" : "h-5 w-5"} transition-transform duration-300 group-hover:scale-110`} />
-                        {!isCompact && n.label}
-                      </div>
-                      {!isCompact && <ChevronDown className="h-4 w-4 opacity-60 transition-transform duration-200 group-data-[state=open]:rotate-180 group-data-[state=open]:opacity-100" />}
-                    </button>
-                  </HoverCardTrigger>
-                  <HoverCardContent side="right" align="start" sideOffset={12} className="w-48 p-2 rounded-2xl shadow-xl border-border bg-popover/95 backdrop-blur flex flex-col gap-1">
-                    {n.subItems.map((sub) => {
-                      const SubIcon = sub.icon;
-                      const subActive = sub.to.includes('?')
-                        ? location.href.includes(sub.to)
-                        : pathname === sub.to;
+              if (n.subItems && n.subItems.length > 0) {
+                const isSubActive = n.subItems.some((sub) => pathname.startsWith(sub.to.split('?')[0]));
+                return (
+                  <HoverCard key={n.to} openDelay={80} closeDelay={150}>
+                    <HoverCardTrigger asChild>
+                      <button
+                        className={`group w-full flex items-center justify-between ${isCompact ? "justify-center p-3" : "gap-3 px-4 py-2.5"} rounded-full text-sm font-medium transition-all duration-300 ease-out hover:translate-x-1.5 cursor-pointer ${active || isSubActive
+                          ? "bg-primary/10 text-primary font-semibold"
+                          : "text-sidebar-foreground hover:bg-sidebar-accent"
+                          }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <Icon className={`${isCompact ? "h-6 w-6" : "h-5 w-5"} transition-transform duration-300 group-hover:scale-110`} />
+                          {!isCompact && n.label}
+                        </div>
+                        {!isCompact && <ChevronDown className="h-4 w-4 opacity-60 transition-transform duration-200 group-data-[state=open]:rotate-180 group-data-[state=open]:opacity-100" />}
+                      </button>
+                    </HoverCardTrigger>
+                    <HoverCardContent side="right" align="start" sideOffset={14} className="w-52 p-2 rounded-2xl shadow-2xl border-border bg-popover/98 backdrop-blur-md flex flex-col gap-1 z-50">
+                      {isCompact && (
+                        <div className="px-3 py-1.5 mb-1 border-b border-border/50 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                          {n.label}
+                        </div>
+                      )}
+                      {n.subItems.map((sub) => {
+                        const SubIcon = sub.icon;
+                        const subActive = sub.to.includes('?')
+                          ? location.href.includes(sub.to)
+                          : pathname === sub.to;
 
-                      return (
-                        <Link
-                          key={sub.to}
-                          to={sub.to.split('?')[0]}
-                          search={sub.to.includes('?') ? Object.fromEntries(new URLSearchParams(sub.to.split('?')[1])) : undefined}
-                          className={`group flex items-center w-full gap-3 px-4 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ease-out hover:translate-x-1.5 ${subActive
-                            ? "bg-primary/10 text-primary shadow-sm"
-                            : "bg-transparent text-foreground hover:bg-primary/5 hover:text-primary"
-                            }`}
-                        >
-                          {SubIcon && <SubIcon className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" />}
-                          {sub.label}
-                        </Link>
-                      );
-                    })}
-                  </HoverCardContent>
-                </HoverCard>
+                        return (
+                          <Link
+                            key={sub.to}
+                            to={sub.to.split('?')[0]}
+                            search={sub.to.includes('?') ? Object.fromEntries(new URLSearchParams(sub.to.split('?')[1])) : undefined}
+                            className={`group flex items-center w-full gap-3 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-200 hover:translate-x-1 ${subActive
+                              ? "bg-primary/10 text-primary shadow-xs"
+                              : "bg-transparent text-foreground hover:bg-primary/5 hover:text-primary"
+                              }`}
+                          >
+                            {SubIcon && <SubIcon className="h-3.5 w-3.5 transition-transform duration-200 group-hover:scale-110" />}
+                            {sub.label}
+                          </Link>
+                        );
+                      })}
+                    </HoverCardContent>
+                  </HoverCard>
+                );
+              }
+
+              const linkElement = (
+                <Link
+                  key={n.to}
+                  to={n.to}
+                  className={`group flex items-center ${isCompact ? "justify-center p-3" : "gap-3 px-4 py-2.5"} rounded-full text-sm font-medium transition-all duration-300 ease-out hover:translate-x-1.5 ${active
+                    ? "bg-primary/10 text-primary font-semibold"
+                    : "text-sidebar-foreground hover:bg-sidebar-accent"
+                    }`}
+                >
+                  <Icon className={`${isCompact ? "h-6 w-6" : "h-5 w-5"} transition-transform duration-300 group-hover:scale-110`} />
+                  {!isCompact && n.label}
+                </Link>
               );
-            }
 
-            return (
-              <Link
-                key={n.to}
-                to={n.to}
-                title={isCompact ? n.label : undefined}
-                className={`group flex items-center ${isCompact ? "justify-center p-3" : "gap-3 px-4 py-2.5"} rounded-full text-sm font-medium transition-all duration-300 ease-out hover:translate-x-1.5 ${active
-                  ? "bg-primary/10 text-primary"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent"
-                  }`}
+              if (isCompact) {
+                return (
+                  <Tooltip key={n.to}>
+                    <TooltipTrigger asChild>
+                      {linkElement}
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side="right"
+                      sideOffset={14}
+                      className="z-50 px-3 py-1.5 text-xs font-semibold rounded-xl bg-popover text-popover-foreground border border-border/80 shadow-2xl backdrop-blur-md animate-in fade-in-0 zoom-in-95 pointer-events-none"
+                    >
+                      {n.label}
+                    </TooltipContent>
+                  </Tooltip>
+                );
+              }
+
+              return linkElement;
+            })}
+          </nav>
+
+          {/* Logout */}
+          {isCompact ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={handleLogout}
+                  className="group mt-4 flex items-center justify-center p-3 rounded-full text-sm font-medium bg-red-500/10 text-red-500 hover:bg-red-500/20 hover:text-red-400 dark:bg-red-500/15 dark:text-red-400 dark:hover:bg-red-500/25 dark:hover:text-red-300 transition-all duration-300 ease-out hover:translate-x-1.5 cursor-pointer"
+                >
+                  <LogOut className="h-6 w-6 transition-transform duration-300 group-hover:scale-110" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent
+                side="right"
+                sideOffset={14}
+                className="z-50 px-3 py-1.5 text-xs font-semibold rounded-xl bg-red-500 text-white shadow-2xl border-0 animate-in fade-in-0 zoom-in-95 pointer-events-none"
               >
-                <Icon className={`${isCompact ? "h-6 w-6" : "h-5 w-5"} transition-transform duration-300 group-hover:scale-110`} />
-                {!isCompact && n.label}
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* Logout */}
-        <button
-          onClick={handleLogout}
-          title={isCompact ? "Logout" : undefined}
-          className={`group mt-4 flex items-center ${isCompact ? "justify-center p-3" : "gap-3 px-4 py-2.5"} rounded-full text-sm font-medium bg-red-500/10 text-red-500 hover:bg-red-500/20 hover:text-red-400 dark:bg-red-500/15 dark:text-red-400 dark:hover:bg-red-500/25 dark:hover:text-red-300 transition-all duration-300 ease-out hover:translate-x-1.5 cursor-pointer`}
-        >
-          <LogOut className={`${isCompact ? "h-6 w-6" : "h-5 w-5"} transition-transform duration-300 group-hover:scale-110`} /> {!isCompact && "Logout"}
-        </button>
+                Logout
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <button
+              onClick={handleLogout}
+              className="group mt-4 flex items-center gap-3 px-4 py-2.5 rounded-full text-sm font-medium bg-red-500/10 text-red-500 hover:bg-red-500/20 hover:text-red-400 dark:bg-red-500/15 dark:text-red-400 dark:hover:bg-red-500/25 dark:hover:text-red-300 transition-all duration-300 ease-out hover:translate-x-1.5 cursor-pointer"
+            >
+              <LogOut className="h-5 w-5 transition-transform duration-300 group-hover:scale-110" />
+              <span>Logout</span>
+            </button>
+          )}
+        </TooltipProvider>
 
       </aside>
 
