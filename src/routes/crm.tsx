@@ -299,10 +299,12 @@ function CrmLayout() {
               <TooltipTrigger asChild>
                 <Link
                   to="/crm"
-                  className="mb-6 flex items-center justify-center cursor-pointer"
+                  className="mb-6 flex items-center justify-center cursor-pointer outline-none focus:outline-none focus:ring-0"
                 >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#3b9f4e] text-white shadow-sm hover:scale-105 transition-transform">
-                    <span className="font-display font-bold text-2xl italic pr-1">H</span>
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 via-rose-600 to-amber-500 text-white shadow-md shadow-rose-500/25 hover:scale-105 active:scale-95 transition-all duration-200 border border-white/25 select-none">
+                    <span className="font-display font-black text-xs tracking-wider text-white drop-shadow-xs">
+                      LMH
+                    </span>
                   </div>
                 </Link>
               </TooltipTrigger>
