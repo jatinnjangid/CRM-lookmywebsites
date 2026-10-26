@@ -265,13 +265,20 @@ function HelpChatPage() {
         }
       }
     } else {
-      // If user has no query tickets yet, default to creating a new ticket
-      if (!isCreatingNew) {
-        setSelectedTicketId(null);
-        setIsCreatingNew(true);
-      }
+      setSelectedTicketId(null);
     }
   }, [visibleTickets, selectedTicketId, isCreatingNew]);
+
+  // Close modal popup on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isCreatingNew) {
+        setIsCreatingNew(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isCreatingNew]);
 
   const activeTicket = useMemo(() => {
     if (!selectedTicketId) return null;
@@ -700,7 +707,7 @@ function HelpChatPage() {
         {/* LEFT COLUMN: Query Chats List */}
         <div
           className={`${
-            activeTicket && !isCreatingNew ? "hidden md:flex" : "flex"
+            activeTicket ? "hidden md:flex" : "flex"
           } flex-col w-full md:w-80 lg:w-96 shrink-0 bg-secondary/15`}
         >
           {/* Header */}
@@ -731,11 +738,8 @@ function HelpChatPage() {
 
             {/* Raise Ticket Button */}
             <Button
-              onClick={() => {
-                setIsCreatingNew(true);
-                setSelectedTicketId(null);
-              }}
-              className="w-full rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-semibold h-9 gap-1.5 shadow-sm shadow-primary/20"
+              onClick={() => setIsCreatingNew(true)}
+              className="w-full rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-semibold h-9 gap-1.5 shadow-sm shadow-primary/20 cursor-pointer"
             >
               <Plus className="h-4 w-4" />
               <span>Raise Query / Ticket</span>
@@ -880,174 +884,13 @@ function HelpChatPage() {
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Active Chat Conversation OR New Ticket Form */}
-        <div className="flex-1 flex flex-col bg-background min-w-0">
-          {isCreatingNew ? (
-            /* NEW TICKET FORM */
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 max-w-2xl mx-auto w-full">
-              <div className="flex items-center justify-between gap-2 border-b border-border/60 pb-3 mb-4">
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => {
-                      setIsCreatingNew(false);
-                      if (tickets.length > 0) setSelectedTicketId(tickets[0].id);
-                    }}
-                    className="md:hidden p-1.5 rounded-lg hover:bg-muted text-muted-foreground"
-                  >
-                    <ArrowLeft className="h-4 w-4" />
-                  </button>
-                  <div>
-                    <h3 className="text-base font-bold text-foreground">Raise New Query / Report Issue</h3>
-                    <p className="text-xs text-muted-foreground">Send query to IT Support for instant review</p>
-                  </div>
-                </div>
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setIsCreatingNew(false);
-                    if (tickets.length > 0) setSelectedTicketId(tickets[0].id);
-                  }}
-                  className="text-xs text-muted-foreground"
-                >
-                  Cancel
-                </Button>
-              </div>
-
-              <form onSubmit={handleCreateTicket} className="space-y-4">
-                {/* Module selection */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-foreground">
-                    Which CRM module has the issue? <span className="text-rose-500">*</span>
-                  </label>
-                  <Select value={newModule} onValueChange={setNewModule}>
-                    <SelectTrigger className="h-10 text-xs rounded-xl bg-card">
-                      <SelectValue placeholder="Select module" />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-xl">
-                      {CRM_MODULES.map((m) => (
-                        <SelectItem key={m.value} value={m.value}>
-                          {m.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Priority */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-foreground">Priority</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {(["Medium", "High", "Critical"] as TicketPriority[]).map((p) => (
-                      <button
-                        key={p}
-                        type="button"
-                        onClick={() => setNewPriority(p)}
-                        className={`text-xs font-semibold py-2 rounded-xl border transition-all ${
-                          newPriority === p
-                            ? p === "Critical"
-                              ? "bg-rose-500/15 text-rose-600 border-rose-500 font-bold"
-                              : p === "High"
-                              ? "bg-amber-500/15 text-amber-600 border-amber-500 font-bold"
-                              : "bg-primary/10 text-primary border-primary font-bold"
-                            : "bg-card text-muted-foreground border-border/80 hover:bg-muted"
-                        }`}
-                      >
-                        {p}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Subject */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-foreground">
-                    Query Title / Subject <span className="text-rose-500">*</span>
-                  </label>
-                  <Input
-                    required
-                    value={newSubject}
-                    onChange={(e) => setNewSubject(e.target.value)}
-                    placeholder="e.g. Booking profit calculation issue on BK-8821"
-                    className="h-10 text-xs rounded-xl bg-card"
-                  />
-                </div>
-
-                {/* Related reference */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-foreground">
-                    Related Reference / ID <span className="text-muted-foreground font-normal">(Optional)</span>
-                  </label>
-                  <Input
-                    value={newRelatedRef}
-                    onChange={(e) => setNewRelatedRef(e.target.value)}
-                    placeholder="e.g. Booking ID BK-1029, Lead #450, Invoice PR-201"
-                    className="h-10 text-xs rounded-xl bg-card"
-                  />
-                </div>
-
-                {/* Description */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-foreground">
-                    What is the issue? Describe what happened <span className="text-rose-500">*</span>
-                  </label>
-                  <Textarea
-                    required
-                    rows={4}
-                    value={newDescription}
-                    onChange={(e) => setNewDescription(e.target.value)}
-                    placeholder="Explain what is going wrong, steps you took, or error displayed..."
-                    className="text-xs rounded-xl bg-card resize-none"
-                  />
-                </div>
-
-                {/* Screenshot */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-foreground">
-                    Attach Screenshot <span className="text-muted-foreground font-normal">(Optional)</span>
-                  </label>
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                          setNewScreenshotUrl(event.target?.result as string);
-                        };
-                        reader.readAsDataURL(file);
-                      }
-                    }}
-                    className="h-10 text-xs rounded-xl bg-card cursor-pointer"
-                  />
-                  {newScreenshotUrl && (
-                    <div className="relative mt-2 rounded-xl border border-border p-2 max-w-xs">
-                      <img src={newScreenshotUrl} alt="Preview" className="h-24 w-auto object-cover rounded-lg" />
-                      <button
-                        type="button"
-                        onClick={() => setNewScreenshotUrl("")}
-                        className="absolute top-3 right-3 bg-background/90 rounded-full p-1 text-rose-500 hover:text-rose-600 shadow"
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                <div className="pt-2 flex items-center justify-end gap-2">
-                  <Button
-                    type="submit"
-                    className="rounded-xl bg-primary text-primary-foreground text-xs font-semibold gap-1.5 h-10 px-5 shadow-sm shadow-primary/20"
-                  >
-                    <Send className="h-3.5 w-3.5" />
-                    <span>Send Query to IT</span>
-                  </Button>
-                </div>
-              </form>
-            </div>
-          ) : activeTicket ? (
+        {/* RIGHT COLUMN: Active Chat Conversation */}
+        <div
+          className={`${
+            !activeTicket ? "hidden md:flex" : "flex"
+          } flex-1 flex-col bg-background min-w-0`}
+        >
+          {activeTicket ? (
             /* ACTIVE CHAT THREAD */
             <>
               {/* Chat Header */}
@@ -1359,6 +1202,179 @@ function HelpChatPage() {
           )}
         </div>
       </div>
+
+      {/* Raise New Query / Report Issue Modal Popup with Blurred Background */}
+      {isCreatingNew && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-md animate-in fade-in duration-200"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsCreatingNew(false);
+          }}
+        >
+          <div className="relative w-full max-w-2xl rounded-3xl bg-card border border-border shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between gap-3 p-4 sm:p-5 border-b border-border/60 bg-muted/30 shrink-0">
+              <div>
+                <h3 className="text-base sm:text-lg font-bold text-foreground">Raise New Query / Report Issue</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">Send query to IT Support for instant review</p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                type="button"
+                onClick={() => setIsCreatingNew(false)}
+                className="h-8 w-8 p-0 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer"
+                title="Cancel / Close"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Scrollable Form Body */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+              <form onSubmit={handleCreateTicket} className="space-y-4">
+                {/* Module selection */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-foreground">
+                    Which CRM module has the issue? <span className="text-rose-500">*</span>
+                  </label>
+                  <Select value={newModule} onValueChange={setNewModule}>
+                    <SelectTrigger className="h-10 text-xs rounded-xl bg-background border-border/80">
+                      <SelectValue placeholder="Select module" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl">
+                      {CRM_MODULES.map((m) => (
+                        <SelectItem key={m.value} value={m.value}>
+                          {m.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Priority */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-foreground">Priority</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(["Medium", "High", "Critical"] as TicketPriority[]).map((p) => (
+                      <button
+                        key={p}
+                        type="button"
+                        onClick={() => setNewPriority(p)}
+                        className={`text-xs font-semibold py-2 rounded-xl border transition-all cursor-pointer ${
+                          newPriority === p
+                            ? p === "Critical"
+                              ? "bg-rose-500/15 text-rose-600 border-rose-500 font-bold ring-2 ring-rose-500/20"
+                              : p === "High"
+                              ? "bg-amber-500/15 text-amber-600 border-amber-500 font-bold ring-2 ring-amber-500/20"
+                              : "bg-primary/10 text-primary border-primary font-bold ring-2 ring-primary/20"
+                            : "bg-background text-muted-foreground border-border/80 hover:bg-muted"
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Subject */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-foreground">
+                    Query Title / Subject <span className="text-rose-500">*</span>
+                  </label>
+                  <Input
+                    required
+                    value={newSubject}
+                    onChange={(e) => setNewSubject(e.target.value)}
+                    placeholder="e.g. Booking profit calculation issue on BK-8821"
+                    className="h-10 text-xs rounded-xl bg-background border-border/80"
+                  />
+                </div>
+
+                {/* Related reference */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-foreground">
+                    Related Reference / ID <span className="text-muted-foreground font-normal">(Optional)</span>
+                  </label>
+                  <Input
+                    value={newRelatedRef}
+                    onChange={(e) => setNewRelatedRef(e.target.value)}
+                    placeholder="e.g. Booking ID BK-1029, Lead #450, Invoice PR-201"
+                    className="h-10 text-xs rounded-xl bg-background border-border/80"
+                  />
+                </div>
+
+                {/* Description */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-foreground">
+                    What is the issue? Describe what happened <span className="text-rose-500">*</span>
+                  </label>
+                  <Textarea
+                    required
+                    rows={4}
+                    value={newDescription}
+                    onChange={(e) => setNewDescription(e.target.value)}
+                    placeholder="Explain what is going wrong, steps you took, or error displayed..."
+                    className="text-xs rounded-xl bg-background border-border/80 resize-none"
+                  />
+                </div>
+
+                {/* Screenshot */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-foreground">
+                    Attach Screenshot <span className="text-muted-foreground font-normal">(Optional)</span>
+                  </label>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          setNewScreenshotUrl(event.target?.result as string);
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    className="h-10 text-xs rounded-xl bg-background border-border/80 cursor-pointer"
+                  />
+                  {newScreenshotUrl && (
+                    <div className="relative mt-2 rounded-xl border border-border p-2 max-w-xs">
+                      <img src={newScreenshotUrl} alt="Preview" className="h-24 w-auto object-cover rounded-lg" />
+                      <button
+                        type="button"
+                        onClick={() => setNewScreenshotUrl("")}
+                        className="absolute top-3 right-3 bg-background/90 rounded-full p-1 text-rose-500 hover:text-rose-600 shadow cursor-pointer"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-3 flex items-center justify-end gap-2 border-t border-border/40">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsCreatingNew(false)}
+                    className="rounded-xl text-xs h-10 px-4 cursor-pointer"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold gap-1.5 h-10 px-5 shadow-md shadow-primary/25 cursor-pointer"
+                  >
+                    <Send className="h-3.5 w-3.5" />
+                    <span>Send Query to IT</span>
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delete Confirmation Pop-up Dialog */}
       <DeleteConfirmModal
