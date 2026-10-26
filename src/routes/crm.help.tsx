@@ -9,7 +9,6 @@ import {
   AlertTriangle,
   MessageSquare,
   HelpCircle,
-  Phone,
   Send,
   User,
   Layers,
@@ -651,17 +650,6 @@ function HelpChatPage() {
     }
   };
 
-  // WhatsApp quick ping link
-  const getWhatsAppLink = (ticket: SupportTicket) => {
-    const text = encodeURIComponent(
-      `Hello IT Support, I have an urgent query on CRM.\n\n*Ticket #:* ${ticket.ticketNumber}\n*Module:* ${ticket.module}\n*Subject:* ${ticket.subject}\n*Requester:* ${ticket.requesterName}\n\nPlease check this at your earliest convenience.`
-    );
-    return `https://wa.me/917340098982?text=${text}`;
-  };
-
-  const directGeneralWhatsApp = `https://wa.me/917340098982?text=${encodeURIComponent(
-    `Hello IT Support, I have an urgent issue with LookMyHolidays CRM. Please help!`
-  )}`;
 
   // Determine if a message is sent by "ME" (outgoing -> right) or INCOMING (-> left)
   const isCommentFromMe = (comm: TicketComment): boolean => {
@@ -721,18 +709,6 @@ function HelpChatPage() {
                   <h2 className="text-sm font-bold text-foreground leading-tight">IT Support Help</h2>
                   <p className="text-[11px] text-muted-foreground">Direct chat with IT Support</p>
                 </div>
-              </div>
-
-              <div className="flex items-center gap-1.5">
-                <a
-                  href={directGeneralWhatsApp}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title="Emergency WhatsApp to IT"
-                  className="flex h-8 w-8 items-center justify-center rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 transition-all"
-                >
-                  <Phone className="h-3.5 w-3.5" />
-                </a>
               </div>
             </div>
 
@@ -981,17 +957,6 @@ function HelpChatPage() {
                     </div>
                   )}
 
-                  {/* WhatsApp escalation */}
-                  <a
-                    href={getWhatsAppLink(activeTicket)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title="Send directly to IT Support on WhatsApp"
-                    className="flex items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 transition-all"
-                  >
-                    <Phone className="h-3 w-3" />
-                    <span className="hidden sm:inline">WhatsApp IT</span>
-                  </a>
 
                   {/* IT Lead status toggles */}
                   {isITLead && (
