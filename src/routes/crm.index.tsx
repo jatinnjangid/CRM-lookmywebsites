@@ -141,6 +141,27 @@ const SourceTooltip = ({ active, payload }: any) => {
   return null;
 };
 
+const renderLeadSourceLabel = ({ cx, cy, midAngle, outerRadius, percent }: any) => {
+  // Hide slice labels for slices under 5% to eliminate collisions and overlapping
+  if (!percent || percent < 0.05) return null;
+  const RADIAN = Math.PI / 180;
+  const radius = outerRadius + 14;
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+  return (
+    <text
+      x={x}
+      y={y}
+      textAnchor={Math.abs(x - cx) < 8 ? "middle" : x > cx ? "start" : "end"}
+      dominantBaseline="central"
+      className="text-[11px] font-bold fill-primary select-none pointer-events-none"
+    >
+      {`${Math.round(percent * 100)}%`}
+    </text>
+  );
+};
+
 const DestinationTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
     const item = payload[0];
@@ -285,7 +306,10 @@ function Dashboard() {
     const src = l.source || "Other";
     sourceCounts[src] = (sourceCounts[src] || 0) + 1;
   });
-  const sourceData = Object.entries(sourceCounts).map(([name, value]) => ({ name, value }));
+  const sourceData = Object.entries(sourceCounts)
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value);
+  const totalLeadsForSource = sourceData.reduce((acc, curr) => acc + (curr.value || 0), 0);
 
   // Destination-wise Sales
   const destSalesMap: Record<string, number> = {};
@@ -1109,33 +1133,57 @@ function Dashboard() {
             </p>
             <div className="h-72 relative flex items-center justify-center">
               {sourceData.length > 0 ? (
-                <ResponsiveContainer>
-                  <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-                    <Pie
-                      data={sourceData}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="45%"
-                      innerRadius={50}
-                      outerRadius={70}
-                      paddingAngle={3}
-                      labelLine={false}
-                      label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
-                    >
-                      {sourceData.map((entry, i) => (
-                        <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip content={<SourceTooltip />} wrapperStyle={{ outline: "none", zIndex: 50 }} />
-                    <Legend
-                      verticalAlign="bottom"
-                      height={40}
-                      iconType="circle"
-                      wrapperStyle={{ fontSize: 10, paddingTop: "20px" }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
+                <>
+                  {/* Center donut metric */}
+                  <div className="absolute top-[44%] left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none select-none z-10">
+                    <span className="block text-2xl font-black text-foreground tracking-tight font-display leading-none">
+                      {totalLeadsForSource}
+                    </span>
+                    <span className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/75 mt-1">
+                      Total Leads
+                    </span>
+                  </div>
+
+                  <ResponsiveContainer>
+                    <PieChart margin={{ top: 22, right: 30, bottom: 10, left: 30 }}>
+                      <Pie
+                        data={sourceData}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="44%"
+                        innerRadius={48}
+                        outerRadius={68}
+                        paddingAngle={3}
+                        labelLine={false}
+                        label={renderLeadSourceLabel}
+                      >
+                        {sourceData.map((entry, i) => (
+                          <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip content={<SourceTooltip />} wrapperStyle={{ outline: "none", zIndex: 50 }} />
+                      <Legend
+                        verticalAlign="bottom"
+                        height={44}
+                        iconType="circle"
+                        wrapperStyle={{ fontSize: 11, paddingTop: "14px" }}
+                        formatter={(value, entry: any) => {
+                          const count = entry?.payload?.value ?? 0;
+                          const pct =
+                            totalLeadsForSource > 0
+                              ? Math.round((count / totalLeadsForSource) * 100)
+                              : 0;
+                          return (
+                            <span className="text-[11px] font-medium text-foreground/80 hover:text-foreground">
+                              {value} <span className="font-bold text-primary font-mono text-[10px]">({pct}%)</span>
+                            </span>
+                          );
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </>
               ) : (
                 <p className="text-xs text-muted-foreground">No leads source details logged</p>
               )}
