@@ -567,7 +567,7 @@ function TasksPage() {
 
       {/* Main Content Area */}
       <div className="flex-1 rounded-xl border bg-card shadow-sm overflow-hidden flex flex-col">
-        <div className="border-b px-4 py-3 flex justify-end gap-2">
+        <div className="border-b px-4 py-3 flex justify-center items-center gap-2 flex-wrap">
           <Button variant="ghost" size="sm" onClick={() => setCurrentView("list")} className={`gap-2 ${currentView === "list" ? "text-primary font-semibold hover:text-primary hover:bg-transparent" : "text-muted-foreground"}`}>
             <List className="h-4 w-4" /> List View
           </Button>
