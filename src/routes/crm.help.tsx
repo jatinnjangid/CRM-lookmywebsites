@@ -1186,15 +1186,15 @@ function HelpChatPage() {
                 <div className="rounded-2xl border border-slate-200/90 bg-white dark:bg-[#111b21] dark:border-[#222e35] p-4.5 space-y-3 mb-4 shadow-xs">
                   <div className="flex items-center justify-between text-xs text-muted-foreground border-b border-slate-100 dark:border-border/40 pb-2.5">
                     <span className="font-semibold text-foreground flex items-center gap-1.5">
-                      <User className="h-3.5 w-3.5 text-blue-600 dark:text-primary" />
+                      <User className="h-3.5 w-3.5 text-primary" />
                       {activeTicket.requesterName} <span className="text-[11px] font-normal text-muted-foreground">({activeTicket.requesterRole})</span>
                     </span>
                     <span className="text-[11px] font-medium">{formatDate(activeTicket.createdAt)} {formatTime(activeTicket.createdAt)}</span>
                   </div>
 
                   {activeTicket.relatedReference && (
-                    <div className="text-xs bg-blue-50 text-blue-700 border border-blue-200/60 dark:bg-white/5 dark:text-slate-200 dark:border-transparent px-2.5 py-1 rounded-lg inline-block font-semibold">
-                      Related Ref: <strong className="text-blue-900 dark:text-white font-bold">{activeTicket.relatedReference}</strong>
+                    <div className="text-xs bg-primary/10 text-primary border border-primary/20 px-2.5 py-1 rounded-lg inline-block font-semibold">
+                      Related Ref: <strong className="font-bold underline decoration-primary/40">{activeTicket.relatedReference}</strong>
                     </div>
                   )}
 
@@ -1286,11 +1286,11 @@ function HelpChatPage() {
                       <div
                         className={`rounded-2xl px-4 py-2.5 text-xs sm:text-[13px] leading-relaxed break-words transition-all ${
                           isMe
-                            ? "bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-[#005c4b] dark:to-[#005c4b] text-white rounded-tr-xs shadow-md shadow-blue-500/15 dark:shadow-emerald-950/20 border border-blue-500/20 dark:border-emerald-500/25"
+                            ? "bg-primary text-primary-foreground rounded-tr-xs shadow-md shadow-primary/20 border border-primary/20"
                             : "bg-white dark:bg-[#202c33] border border-slate-200/90 dark:border-[#2a3942] text-slate-800 dark:text-slate-100 rounded-tl-xs shadow-xs"
                         } ${
                           isCelebration
-                            ? "ring-2 ring-blue-500/30 dark:ring-emerald-500/40"
+                            ? "ring-2 ring-primary/40 shadow-lg"
                             : ""
                         }`}
                       >
@@ -1299,11 +1299,11 @@ function HelpChatPage() {
                         {/* Timestamp & read receipts */}
                         <div
                           className={`flex items-center justify-end gap-1 text-[10px] mt-1 select-none font-medium ${
-                            isMe ? "text-blue-100/80 dark:text-emerald-200/70" : "text-slate-400 dark:text-[#8696a0]"
+                            isMe ? "text-primary-foreground/80" : "text-slate-400 dark:text-[#8696a0]"
                           }`}
                         >
                           <span>{formatTime(comm.createdAt)}</span>
-                          {isMe && <CheckCheck className="h-3.5 w-3.5 text-blue-200 dark:text-[#53bdeb]" />}
+                          {isMe && <CheckCheck className="h-3.5 w-3.5 text-primary-foreground/90" />}
                         </div>
                       </div>
                     </div>
@@ -1326,12 +1326,12 @@ function HelpChatPage() {
                       }
                     }}
                     placeholder={`Reply to ${isITLead ? activeTicket.requesterName : "IT Administrator"}...`}
-                    className="h-11 text-xs sm:text-sm rounded-full bg-slate-50 dark:bg-[#202c33] border-slate-200/90 dark:border-[#2a3942] text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-[#8696a0] px-4.5 focus-visible:ring-2 focus-visible:ring-blue-500/30 dark:focus-visible:ring-emerald-500/30 shadow-xs transition-all"
+                    className="h-11 text-xs sm:text-sm rounded-full bg-slate-50 dark:bg-[#202c33] border-slate-200/90 dark:border-[#2a3942] text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-[#8696a0] px-4.5 focus-visible:ring-2 focus-visible:ring-primary/30 shadow-xs transition-all"
                   />
                   <Button
                     onClick={handleSendMessage}
                     disabled={!chatInput.trim()}
-                    className="h-11 w-11 rounded-full p-0 flex items-center justify-center bg-blue-600 hover:bg-blue-700 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white shrink-0 shadow-md shadow-blue-500/25 dark:shadow-emerald-950/40 transition-transform active:scale-95 disabled:opacity-50"
+                    className="h-11 w-11 rounded-full p-0 flex items-center justify-center bg-primary hover:bg-primary/90 text-primary-foreground shrink-0 shadow-md shadow-primary/25 transition-transform active:scale-95 disabled:opacity-50 cursor-pointer"
                   >
                     <Send className="h-4 w-4" />
                   </Button>
