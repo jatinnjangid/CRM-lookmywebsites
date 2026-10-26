@@ -52,6 +52,7 @@ import {
   type NotificationPreferences,
   playNotificationChime,
 } from "@/lib/notifications";
+import { BRAND_ACCENT_COLORS, applyAppearanceToDOM } from "@/lib/theme";
 import { toast as sonnerToast } from "sonner";
 
 export const Route = createFileRoute("/crm/settings")({ component: SettingsPage });
@@ -341,35 +342,7 @@ function SettingsPage() {
       }),
     );
 
-    const root = window.document.documentElement;
-    root.classList.remove("light", "dark");
-    if (appearance.theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
-        ? "dark"
-        : "light";
-      if (systemTheme === "dark") root.classList.add("dark");
-    } else if (appearance.theme === "dark") {
-      root.classList.add("dark");
-    }
-
-    if (appearance.fontSize === "small") root.style.fontSize = "14px";
-    else if (appearance.fontSize === "large") root.style.fontSize = "18px";
-    else root.style.fontSize = "16px";
-
-    const colorMap: Record<string, string> = {
-      "#f43f5e": "0.6 0.2 20",
-      "#3b82f6": "0.6 0.15 250",
-      "#10b981": "0.65 0.15 150",
-      "#8b5cf6": "0.6 0.18 290",
-      "#f59e0b": "0.7 0.2 45",
-      "#06b6d4": "0.7 0.12 210",
-      "#6366f1": "0.58 0.22 270",
-    };
-    if (appearance.accentColor && colorMap[appearance.accentColor]) {
-      root.style.setProperty("--primary", `oklch(${colorMap[appearance.accentColor]})`);
-    } else {
-      root.style.removeProperty("--primary");
-    }
+    applyAppearanceToDOM(appearance);
   }, [appearance]);
 
   // ── Notifications state ─────────────────────────────────────────
@@ -1000,32 +973,41 @@ function SettingsPage() {
 
                 {/* Accent Color Swatches */}
                 <div>
-                  <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                    Primary Brand Accent
-                  </Label>
-                  <div className="mt-3 flex flex-wrap gap-3.5">
-                    {[
-                      { hex: "#f43f5e", name: "Rose Crimson (Default)" },
-                      { hex: "#3b82f6", name: "Royal Sapphire" },
-                      { hex: "#10b981", name: "Emerald Growth" },
-                      { hex: "#8b5cf6", name: "Neon Violet" },
-                      { hex: "#f59e0b", name: "Amber Gold" },
-                      { hex: "#06b6d4", name: "Cyan Spark" },
-                      { hex: "#6366f1", name: "Deep Indigo" },
-                    ].map((item) => (
-                      <button
-                        key={item.hex}
-                        type="button"
-                        onClick={() => setAppearance({ ...appearance, accentColor: item.hex })}
-                        style={{ backgroundColor: item.hex }}
-                        title={item.name}
-                        className={`h-9 w-9 rounded-2xl border-2 transition-transform hover:scale-110 shadow-sm flex items-center justify-center cursor-pointer ${
-                          appearance.accentColor === item.hex ? "border-foreground scale-110 ring-2 ring-primary/40" : "border-transparent"
-                        }`}
-                      >
-                        {appearance.accentColor === item.hex && <Check className="h-4 w-4 text-white drop-shadow" />}
-                      </button>
-                    ))}
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                      Primary Brand Accent
+                    </Label>
+                    <span className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                      <span
+                        className="inline-block h-2.5 w-2.5 rounded-full ring-1 ring-border shadow-xs transition-colors"
+                        style={{ backgroundColor: appearance.accentColor || "#f43f5e" }}
+                      />
+                      {BRAND_ACCENT_COLORS.find(
+                        (c) => c.hex.toLowerCase() === appearance.accentColor?.toLowerCase(),
+                      )?.name || "Rose Crimson"}
+                    </span>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2.5">
+                    {BRAND_ACCENT_COLORS.map((item) => {
+                      const isSelected =
+                        (appearance.accentColor || "#f43f5e").toLowerCase() === item.hex.toLowerCase();
+                      return (
+                        <button
+                          key={item.hex}
+                          type="button"
+                          onClick={() => setAppearance({ ...appearance, accentColor: item.hex })}
+                          style={{ backgroundColor: item.hex }}
+                          title={item.name}
+                          className={`h-9 w-9 rounded-2xl border-2 transition-all hover:scale-110 shadow-xs flex items-center justify-center cursor-pointer ${
+                            isSelected
+                              ? "border-foreground scale-110 ring-2 ring-primary/40 shadow-md"
+                              : "border-transparent opacity-90 hover:opacity-100"
+                          }`}
+                        >
+                          {isSelected && <Check className="h-4 w-4 text-white drop-shadow-md" />}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 

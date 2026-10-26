@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import logoImg from "../assets/Logo.svg";
 import { Toaster } from "@/components/ui/sonner";
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import { applyAppearanceToDOM } from "../lib/theme";
 
 function NotFoundComponent() {
   return (
@@ -149,36 +150,7 @@ function RootComponent() {
 
       const stored = window.localStorage.getItem("crm-appearance");
       if (stored) {
-        const appearance = JSON.parse(stored);
-        const root = window.document.documentElement;
-
-        root.classList.remove("light", "dark");
-        if (appearance.theme === "system") {
-          const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
-            ? "dark"
-            : "light";
-          if (systemTheme === "dark") root.classList.add("dark");
-        } else if (appearance.theme === "dark") {
-          root.classList.add("dark");
-        }
-
-        if (appearance.fontSize === "small") root.style.fontSize = "14px";
-        else if (appearance.fontSize === "large") root.style.fontSize = "18px";
-        else root.style.fontSize = "16px";
-
-        const colorMap: Record<string, string> = {
-          "#f43f5e": "0.6 0.2 20",
-          "#3b82f6": "0.6 0.15 250",
-          "#10b981": "0.65 0.15 150",
-          "#8b5cf6": "0.6 0.18 290",
-          "#f59e0b": "0.7 0.2 45",
-          "#06b6d4": "0.7 0.12 210",
-        };
-        if (appearance.accentColor && colorMap[appearance.accentColor]) {
-          root.style.setProperty("--primary", `oklch(${colorMap[appearance.accentColor]})`);
-        } else {
-          root.style.removeProperty("--primary");
-        }
+        applyAppearanceToDOM(appearance);
       }
     } catch (e) {
       console.error("Error applying appearance settings:", e);
