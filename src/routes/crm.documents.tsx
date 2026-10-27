@@ -105,13 +105,38 @@ function saveToStorage(folders: FolderItem[]) {
 }
 
 /* ─── Helpers ─── */
+export function getFolderColorClasses(colorStr?: string): string {
+  if (!colorStr) return "bg-primary/15 text-primary border-primary/25 dark:bg-primary/20 dark:border-primary/35";
+  
+  if (colorStr.includes("blue")) {
+    return "bg-blue-500/15 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 border-blue-500/25 dark:border-blue-500/35";
+  }
+  if (colorStr.includes("cyan")) {
+    return "bg-cyan-500/15 text-cyan-600 dark:bg-cyan-500/20 dark:text-cyan-400 border-cyan-500/25 dark:border-cyan-500/35";
+  }
+  if (colorStr.includes("rose") || colorStr.includes("red")) {
+    return "bg-rose-500/15 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 border-rose-500/25 dark:border-rose-500/35";
+  }
+  if (colorStr.includes("emerald") || colorStr.includes("green")) {
+    return "bg-emerald-500/15 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 border-emerald-500/25 dark:border-emerald-500/35";
+  }
+  if (colorStr.includes("amber") || colorStr.includes("yellow")) {
+    return "bg-amber-500/15 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 border-amber-500/25 dark:border-amber-500/35";
+  }
+  if (colorStr.includes("violet") || colorStr.includes("purple") || colorStr.includes("indigo")) {
+    return "bg-violet-500/15 text-violet-600 dark:bg-violet-500/20 dark:text-violet-400 border-violet-500/25 dark:border-violet-500/35";
+  }
+  
+  return `${colorStr} dark:bg-primary/20 dark:text-primary dark:border-primary/30`;
+}
+
 const COLORS = [
-  { bg: "bg-blue-100 text-blue-600 border-blue-200", icon: "#3b82f6" },
-  { bg: "bg-violet-100 text-violet-600 border-violet-200", icon: "#8b5cf6" },
-  { bg: "bg-amber-100 text-amber-600 border-amber-200", icon: "#f59e0b" },
-  { bg: "bg-emerald-100 text-emerald-600 border-emerald-200", icon: "#10b981" },
-  { bg: "bg-rose-100 text-rose-600 border-rose-200", icon: "#f43f5e" },
-  { bg: "bg-cyan-100 text-cyan-600 border-cyan-200", icon: "#06b6d4" },
+  { bg: "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/25", icon: "#3b82f6" },
+  { bg: "bg-violet-500/15 text-violet-600 dark:text-violet-400 border-violet-500/25", icon: "#8b5cf6" },
+  { bg: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/25", icon: "#f59e0b" },
+  { bg: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/25", icon: "#10b981" },
+  { bg: "bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/25", icon: "#f43f5e" },
+  { bg: "bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border-cyan-500/25", icon: "#06b6d4" },
 ];
 
 function pickColor(idx: number) {
@@ -174,7 +199,7 @@ const SEED_FOLDERS: FolderItem[] = [
   {
     id: "F-msx6oaug",
     name: "Sunil Samariya",
-    color: "bg-emerald-100 text-emerald-600 border-emerald-200",
+    color: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/25",
     iconColor: "#10b981",
     createdAt: "2026-08-17T12:01:50.824Z",
     description: "Insurance for Sunil Samariya",
@@ -193,7 +218,7 @@ const SEED_FOLDERS: FolderItem[] = [
   {
     id: "F-msjy3cnv",
     name: "Dipesh",
-    color: "bg-emerald-100 text-emerald-600 border-emerald-200",
+    color: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/25",
     iconColor: "#10b981",
     createdAt: "2026-08-08T05:40:36.187Z",
     description: "Insurance for Dipesh",
@@ -212,7 +237,7 @@ const SEED_FOLDERS: FolderItem[] = [
   {
     id: "F-mshins4z",
     name: "Rahul ji ",
-    color: "bg-emerald-100 text-emerald-600 border-emerald-200",
+    color: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/25",
     iconColor: "#10b981",
     createdAt: "2026-08-06T12:53:03.155Z",
     description: "Insurance for Rahul ji ",
@@ -239,7 +264,7 @@ const SEED_FOLDERS: FolderItem[] = [
   {
     id: "F-mshex70c",
     name: "Kdrs Public School Gangapur",
-    color: "bg-emerald-100 text-emerald-600 border-emerald-200",
+    color: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/25",
     iconColor: "#10b981",
     createdAt: "2026-08-06T11:08:23.868Z",
     description: "Insurance for Kdrs Public School Gangapur",
@@ -258,7 +283,7 @@ const SEED_FOLDERS: FolderItem[] = [
   {
     id: "F-msfngutq",
     name: "Om Prakash Vishnoi ",
-    color: "bg-emerald-100 text-emerald-600 border-emerald-200",
+    color: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/25",
     iconColor: "#10b981",
     createdAt: "2026-08-05T05:32:05.774Z",
     description: "Insurance for Om Prakash Vishnoi ",
@@ -293,7 +318,7 @@ const SEED_FOLDERS: FolderItem[] = [
   {
     id: "F-07",
     name: "Visa booking",
-    color: "bg-blue-100 text-blue-600 border-blue-200",
+    color: "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/25",
     iconColor: "#3b82f6",
     createdAt: "2026-06-30",
     description: "No description",
@@ -312,7 +337,7 @@ const SEED_FOLDERS: FolderItem[] = [
   {
     id: "F-06",
     name: "Tour Itineraries",
-    color: "bg-cyan-100 text-cyan-600 border-cyan-200",
+    color: "bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border-cyan-500/25",
     iconColor: "#06b6d4",
     createdAt: "2026-03-18",
     description: "Day-wise itinerary PDFs for each package",
@@ -339,7 +364,7 @@ const SEED_FOLDERS: FolderItem[] = [
   {
     id: "F-05",
     name: "Flight Tickets",
-    color: "bg-rose-100 text-rose-600 border-rose-200",
+    color: "bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/25",
     iconColor: "#f43f5e",
     createdAt: "2026-03-05",
     description: "E-tickets and boarding pass copies",
@@ -349,7 +374,7 @@ const SEED_FOLDERS: FolderItem[] = [
   {
     id: "F-04",
     name: "Hotel Vouchers",
-    color: "bg-emerald-100 text-emerald-600 border-emerald-200",
+    color: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/25",
     iconColor: "#10b981",
     createdAt: "2026-02-20",
     description: "Confirmed booking vouchers for all hotels",
@@ -359,7 +384,7 @@ const SEED_FOLDERS: FolderItem[] = [
   {
     id: "F-03",
     name: "General Insurance",
-    color: "bg-amber-100 text-amber-600 border-amber-200",
+    color: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/25",
     iconColor: "#f59e0b",
     createdAt: "2026-02-03",
     description: "Insurance certificates and policy PDFs",
@@ -369,7 +394,7 @@ const SEED_FOLDERS: FolderItem[] = [
   {
     id: "F-02",
     name: "Visa Applications",
-    color: "bg-violet-100 text-violet-600 border-violet-200",
+    color: "bg-violet-500/15 text-violet-600 dark:text-violet-400 border-violet-500/25",
     iconColor: "#8b5cf6",
     createdAt: "2026-01-15",
     description: "Submitted and approved visa documents",
@@ -379,7 +404,7 @@ const SEED_FOLDERS: FolderItem[] = [
   {
     id: "F-01",
     name: "Passports & IDs",
-    color: "bg-blue-100 text-blue-600 border-blue-200",
+    color: "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/25",
     iconColor: "#3b82f6",
     createdAt: "2026-01-10",
     description: "Customer passport scans and ID documents",
@@ -615,7 +640,7 @@ function FolderCard({
 
       {/* Icon */}
       <div
-        className={`flex h-12 w-12 items-center justify-center rounded-2xl border-2 ${folder.color}`}
+        className={`flex h-12 w-12 items-center justify-center rounded-2xl border-2 ${getFolderColorClasses(folder.color)}`}
       >
         <Folder className="h-6 w-6" />
       </div>
@@ -896,7 +921,7 @@ function FolderDetail({
         </button>
         <div className="flex items-center gap-2">
           <div
-            className={`flex h-9 w-9 items-center justify-center rounded-xl border-2 ${folder.color}`}
+            className={`flex h-9 w-9 items-center justify-center rounded-xl border-2 ${getFolderColorClasses(folder.color)}`}
           >
             <FolderOpen className="h-5 w-5" />
           </div>
@@ -1174,8 +1199,8 @@ function FoldersPage() {
         generalInsuranceFolder = {
           id: "F-INS-general",
           name: "General Insurance",
-          color: "bg-emerald-100 text-emerald-600 border-emerald-200",
-          iconColor: "#10b981",
+          color: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/25",
+          iconColor: "#f59e0b",
           createdAt: "2026-01-01",
           description: "All General Insurance Documents",
           files: [],
@@ -1620,7 +1645,7 @@ function FoldersPage() {
       <Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} title="Delete Folder">
         {deleteTarget && (
           <div className="space-y-4">
-            <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            <div className="rounded-xl border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/40 p-4 text-sm text-red-700 dark:text-red-300">
               Are you sure you want to delete <strong>"{deleteTarget.name}"</strong>?
               {deleteTarget.files.length > 0 &&
                 ` This folder contains ${deleteTarget.files.length} file${deleteTarget.files.length !== 1 ? "s" : ""}.`}{" "}
@@ -1654,8 +1679,8 @@ function FoldersPage() {
         title="Google Drive Integration"
       >
         <div className="space-y-4">
-          <div className="flex items-center gap-4 bg-green-50 border border-green-100 p-4 rounded-xl">
-            <div className="bg-card text-card-foreground p-2 rounded-xl shadow-sm border border-gray-100 flex items-center justify-center">
+          <div className="flex items-center gap-4 bg-green-50 dark:bg-green-950/30 border border-green-100 dark:border-green-900/40 p-4 rounded-xl">
+            <div className="bg-card text-card-foreground p-2 rounded-xl shadow-sm border border-border flex items-center justify-center">
               <Cloud className="h-6 w-6 text-[#0F9D58]" />
             </div>
             <div>
@@ -1666,7 +1691,7 @@ function FoldersPage() {
             </div>
           </div>
 
-          <p className="text-xs text-gray-600 leading-relaxed">
+          <p className="text-xs text-muted-foreground leading-relaxed">
             {isZohoConnected
               ? "Your CRM documents are actively syncing with Google Drive. Files uploaded here are automatically transferred to your secure Google cloud."
               : "Connect your Google Drive account to seamlessly synchronize travel documents, booking vouchers, and passenger passports securely."}
@@ -1693,7 +1718,7 @@ function FoldersPage() {
                     setZohoModalOpen(false);
                   }
                 }}
-                className="gap-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 text-xs font-semibold h-9"
+                className="gap-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-400 border border-red-200 dark:border-red-900/40 text-xs font-semibold h-9"
               >
                 <Unlink className="h-4 w-4" /> Disconnect
               </Button>
@@ -1760,9 +1785,9 @@ function FoldersPage() {
                 exportToPDF();
                 setIsExportOpen(false);
               }}
-              className="flex flex-col items-center justify-center gap-2 rounded-xl border border-border p-4 hover:border-rose-300 hover:bg-rose-50/50 hover:text-rose-600 transition-all text-center group"
+              className="flex flex-col items-center justify-center gap-2 rounded-xl border border-border p-4 hover:border-rose-300 hover:bg-rose-50/50 dark:hover:bg-rose-950/20 hover:text-rose-600 transition-all text-center group"
             >
-              <div className="grid h-10 w-10 place-items-center rounded-lg bg-rose-50 text-rose-600 group-hover:bg-rose-100">
+              <div className="grid h-10 w-10 place-items-center rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 group-hover:bg-rose-100 dark:group-hover:bg-rose-900/50">
                 <FileText className="h-5 w-5" />
               </div>
               <span className="text-xs font-semibold">PDF Report</span>
@@ -1774,9 +1799,9 @@ function FoldersPage() {
                 exportToExcel();
                 setIsExportOpen(false);
               }}
-              className="flex flex-col items-center justify-center gap-2 rounded-xl border border-border p-4 hover:border-emerald-300 hover:bg-emerald-50/50 hover:text-emerald-600 transition-all text-center group"
+              className="flex flex-col items-center justify-center gap-2 rounded-xl border border-border p-4 hover:border-emerald-300 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20 hover:text-emerald-600 transition-all text-center group"
             >
-              <div className="grid h-10 w-10 place-items-center rounded-lg bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100">
+              <div className="grid h-10 w-10 place-items-center rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-900/50">
                 <Table2 className="h-5 w-5" />
               </div>
               <span className="text-xs font-semibold">Excel (CSV)</span>
@@ -1788,9 +1813,9 @@ function FoldersPage() {
                 exportToWord();
                 setIsExportOpen(false);
               }}
-              className="flex flex-col items-center justify-center gap-2 rounded-xl border border-border p-4 hover:border-blue-300 hover:bg-blue-50/50 hover:text-blue-600 transition-all text-center group"
+              className="flex flex-col items-center justify-center gap-2 rounded-xl border border-border p-4 hover:border-blue-300 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 hover:text-blue-600 transition-all text-center group"
             >
-              <div className="grid h-10 w-10 place-items-center rounded-lg bg-blue-50 text-blue-600 group-hover:bg-blue-100">
+              <div className="grid h-10 w-10 place-items-center rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/50">
                 <Briefcase className="h-5 w-5" />
               </div>
               <span className="text-xs font-semibold">Word (.doc)</span>

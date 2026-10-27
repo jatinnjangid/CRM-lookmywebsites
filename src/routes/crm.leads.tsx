@@ -1506,7 +1506,7 @@ function LeadDetail({
                   onValueChange={(val: LeadStatus) => onStatusChange(lead.id, val)}
                 >
                   <SelectTrigger
-                    className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold border-none h-auto w-auto focus:ring-0 focus:ring-offset-0 shadow-none [&>svg]:hidden ${STATUS_PILL[lead.status]}`}
+                    className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold h-auto w-auto focus:ring-0 focus:ring-offset-0 shadow-none [&>svg]:hidden ${STATUS_PILL[lead.status]}`}
                   >
                     <div className="flex items-center gap-1.5">
                       <span className={`h-1.5 w-1.5 rounded-full ${STATUS_DOT[lead.status]}`} />
@@ -2711,9 +2711,9 @@ function LeadsPage() {
                               updateStatus(l.id, val);
                             }}
                           >
-                            <SelectTrigger className={`inline-flex items-center rounded-sm px-2 py-1 text-xs font-semibold whitespace-nowrap border-none h-auto w-auto focus:ring-0 focus:ring-offset-0 shadow-none [&>svg]:hidden ${STATUS_PILL[l.status]}`}>
+                            <SelectTrigger className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap h-auto w-auto focus:ring-0 focus:ring-offset-0 shadow-none [&>svg]:hidden ${STATUS_PILL[l.status]}`}>
                               <SelectValue />
-                              <ChevronDown className="h-4 w-4 opacity-50 ml-1" />
+                              <ChevronDown className="h-3.5 w-3.5 opacity-50 ml-1" />
                             </SelectTrigger>
                             <SelectContent>
                               {STATUSES.map((s) => (
@@ -2755,9 +2755,9 @@ function LeadsPage() {
                               });
                             }}
                           >
-                            <SelectTrigger className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap border-none h-auto w-auto focus:ring-0 focus:ring-offset-0 shadow-none [&>svg]:hidden ${PRIORITY_PILL[l.priority || "Medium"] || "bg-secondary text-foreground"}`}>
+                            <SelectTrigger className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap h-auto w-auto focus:ring-0 focus:ring-offset-0 shadow-none [&>svg]:hidden ${PRIORITY_PILL[l.priority || "Medium"] || "bg-secondary text-foreground"}`}>
                               <SelectValue placeholder="-" />
-                              <ChevronDown className="h-4 w-4 opacity-50 ml-1" />
+                              <ChevronDown className="h-3.5 w-3.5 opacity-50 ml-1" />
                             </SelectTrigger>
                             <SelectContent>
                               {["High", "Medium", "Low"].map((p) => (
@@ -2860,7 +2860,7 @@ function LeadsPage() {
                                   setEditingTableNoteId(l.id);
                                   setTableEditNoteText("");
                                 }}
-                                className="text-sm text-blue-500 hover:text-blue-600 font-medium text-left whitespace-nowrap mt-1 pl-1"
+                                className="text-sm text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 font-medium text-left whitespace-nowrap mt-1 pl-1 transition-colors"
                               >
                                 + Add Note
                               </button>

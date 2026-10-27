@@ -172,23 +172,23 @@ const STATUSES: LeadStatus[] = [
 ];
 
 const STATUS_PILL: Record<LeadStatus, string> = {
-  "New Lead": "bg-blue-100 text-blue-700",
-  Contacted: "bg-amber-100 text-amber-700",
-  "Quotation Sent": "bg-cyan-100 text-cyan-700",
-  Negotiation: "bg-purple-100 text-purple-700",
-  Confirmed: "bg-teal-100 text-teal-700",
-  "Payment Pending": "bg-rose-100 text-rose-700",
-  "on conform": "bg-indigo-100 text-indigo-700",
-  "in process": "bg-emerald-100 text-emerald-700",
-  "Postponed": "bg-pink-100 text-pink-700",
-  "Completed": "bg-fuchsia-100 text-fuchsia-700",
-  Lost: "bg-slate-100 text-slate-700",
+  "New Lead": "bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/25",
+  Contacted: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/25",
+  "Quotation Sent": "bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border border-cyan-500/25",
+  Negotiation: "bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/25",
+  Confirmed: "bg-teal-500/15 text-teal-600 dark:text-teal-400 border border-teal-500/25",
+  "Payment Pending": "bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/25",
+  "on conform": "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/25",
+  "in process": "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25",
+  Postponed: "bg-pink-500/15 text-pink-600 dark:text-pink-400 border border-pink-500/25",
+  Completed: "bg-fuchsia-500/15 text-fuchsia-600 dark:text-fuchsia-400 border border-fuchsia-500/25",
+  Lost: "bg-slate-500/15 text-slate-600 dark:text-slate-400 border border-slate-500/25",
 };
 
 const PRIORITY_PILL: Record<string, string> = {
-  High: "bg-red-100 text-red-700",
-  Medium: "bg-yellow-100 text-yellow-700",
-  Low: "bg-green-100 text-green-700",
+  High: "bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/25",
+  Medium: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/25",
+  Low: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25",
 };
 
 const STATUS_ACCENT: Record<LeadStatus, string> = {
@@ -611,14 +611,14 @@ function CorporateFields({ form, set }: { form: typeof EMPTY_FORM; set: any }) {
 
 // ── Service category card colours ─────────────────────────────────────────
 const SVC_COLOR: Record<string, string> = {
-  "Travel Services": "from-blue-500/10 to-sky-500/5 hover:from-blue-500/20 border-blue-200/60",
-  "Holiday Packages": "from-teal-500/10 to-emerald-500/5 hover:from-teal-500/20 border-teal-200/60",
-  Business: "from-violet-500/10 to-purple-500/5 hover:from-violet-500/20 border-violet-200/60",
+  "Travel Services": "from-blue-500/10 to-sky-500/5 hover:from-blue-500/20 border-blue-200/60 dark:border-blue-500/30",
+  "Holiday Packages": "from-teal-500/10 to-emerald-500/5 hover:from-teal-500/20 border-teal-200/60 dark:border-teal-500/30",
+  Business: "from-violet-500/10 to-purple-500/5 hover:from-violet-500/20 border-violet-200/60 dark:border-violet-500/30",
 };
 const SVC_BADGE: Record<string, string> = {
-  "Travel Services": "bg-blue-100 text-blue-700",
-  "Holiday Packages": "bg-teal-100 text-teal-700",
-  Business: "bg-violet-100 text-violet-700",
+  "Travel Services": "bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/25",
+  "Holiday Packages": "bg-teal-500/15 text-teal-600 dark:text-teal-400 border border-teal-500/25",
+  Business: "bg-violet-500/15 text-violet-600 dark:text-violet-400 border border-violet-500/25",
 };
 
 // ── Helper: which sub-form to render ────────────────────────────────────────
@@ -1382,7 +1382,7 @@ function LeadDetail({
                   onValueChange={(val: LeadStatus) => onStatusChange(lead.id, val)}
                 >
                   <SelectTrigger
-                    className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold border-none h-auto w-auto focus:ring-0 focus:ring-offset-0 shadow-none [&>svg]:hidden ${STATUS_PILL[lead.status]}`}
+                    className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold h-auto w-auto focus:ring-0 focus:ring-offset-0 shadow-none [&>svg]:hidden ${STATUS_PILL[lead.status]}`}
                   >
                     <div className="flex items-center gap-1.5">
                       <span className={`h-1.5 w-1.5 rounded-full ${STATUS_DOT[lead.status]}`} />
@@ -2629,7 +2629,7 @@ function LeadsPage() {
               <table className="w-full text-sm">
                 <thead className="bg-secondary/60 dark:bg-muted/40 border-b border-border text-left text-xs uppercase tracking-wider text-muted-foreground select-none">
                   <tr>
-                    <th className="px-4 py-3.5 font-semibold text-muted-foreground">
+                    <th className="px-4 py-3.5 font-semibold text-muted-foreground whitespace-nowrap">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <div className="cursor-pointer hover:text-foreground transition-colors flex items-center gap-1">
@@ -2644,11 +2644,11 @@ function LeadsPage() {
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </th>
-                    <th className="px-4 py-3.5 font-semibold text-muted-foreground">Name</th>
+                    <th className="px-4 py-3.5 font-semibold text-muted-foreground whitespace-nowrap">Name</th>
                     <th className="px-4 py-3.5 font-semibold text-muted-foreground whitespace-nowrap">Create Date & Time</th>
-                    <th className="px-4 py-3.5 font-semibold text-muted-foreground">Gen. Insurance Type</th>
+                    <th className="px-4 py-3.5 font-semibold text-muted-foreground whitespace-nowrap">Gen. Insurance Type</th>
                     <th className="px-4 py-3.5 font-semibold text-muted-foreground whitespace-nowrap">Expiry Date</th>
-                    <th className="px-4 py-3.5 font-semibold text-muted-foreground">
+                    <th className="px-4 py-3.5 font-semibold text-muted-foreground whitespace-nowrap">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <div className="cursor-pointer hover:text-foreground transition-colors flex items-center gap-1">
@@ -2663,7 +2663,7 @@ function LeadsPage() {
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </th>
-                    <th className="px-4 py-3.5 font-semibold text-muted-foreground">
+                    <th className="px-4 py-3.5 font-semibold text-muted-foreground whitespace-nowrap">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <div className="cursor-pointer hover:text-foreground transition-colors flex items-center gap-1">
@@ -2701,9 +2701,9 @@ function LeadsPage() {
                               updateStatus(l.id, val);
                             }}
                           >
-                            <SelectTrigger className={`inline-flex items-center rounded-sm px-2 py-1 text-xs font-semibold whitespace-nowrap border-none h-auto w-auto focus:ring-0 focus:ring-offset-0 shadow-none [&>svg]:hidden ${STATUS_PILL[l.status]}`}>
+                            <SelectTrigger className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap h-auto w-auto focus:ring-0 focus:ring-offset-0 shadow-none [&>svg]:hidden ${STATUS_PILL[l.status]}`}>
                               <SelectValue />
-                              <ChevronDown className="h-4 w-4 opacity-50 ml-1" />
+                              <ChevronDown className="h-3.5 w-3.5 opacity-50 ml-1" />
                             </SelectTrigger>
                             <SelectContent>
                               {STATUSES.map((s) => (
@@ -2742,9 +2742,9 @@ function LeadsPage() {
                               });
                             }}
                           >
-                            <SelectTrigger className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap border-none h-auto w-auto focus:ring-0 focus:ring-offset-0 shadow-none [&>svg]:hidden ${PRIORITY_PILL[l.priority || "Medium"] || "bg-secondary text-foreground"}`}>
+                            <SelectTrigger className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap h-auto w-auto focus:ring-0 focus:ring-offset-0 shadow-none [&>svg]:hidden ${PRIORITY_PILL[l.priority || "Medium"] || "bg-secondary text-foreground"}`}>
                               <SelectValue placeholder="-" />
-                              <ChevronDown className="h-4 w-4 opacity-50 ml-1" />
+                              <ChevronDown className="h-3.5 w-3.5 opacity-50 ml-1" />
                             </SelectTrigger>
                             <SelectContent>
                               {["High", "Medium", "Low"].map((p) => (
@@ -2847,7 +2847,7 @@ function LeadsPage() {
                                   setEditingTableNoteId(l.id);
                                   setTableEditNoteText("");
                                 }}
-                                className="text-sm text-blue-500 hover:text-blue-600 font-medium text-left whitespace-nowrap mt-1 pl-1"
+                                className="text-sm text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 font-medium text-left whitespace-nowrap mt-1 pl-1 transition-colors"
                               >
                                 + Add Note
                               </button>
