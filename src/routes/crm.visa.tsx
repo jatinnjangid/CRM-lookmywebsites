@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouterState } from "@tanstack/react-router";
 import { useSupabaseTable } from "@/hooks/useSupabaseTable";
 import { getAuth } from "@/lib/auth";
 import { toast } from "sonner";
@@ -552,7 +553,17 @@ function VisaPage() {
     "visa_requirements",
     []
   );
+  const location = useRouterState({ select: (s) => s.location });
   const [activeSubTab, setActiveSubTab] = useState<"applications" | "booking" | "requirements">("applications");
+
+  // Sync tab from URL search param (?tab=booking / ?tab=applications)
+  useEffect(() => {
+    const params = new URLSearchParams(location.searchStr);
+    const tab = params.get("tab");
+    if (tab === "booking") setActiveSubTab("booking");
+    else if (tab === "requirements") setActiveSubTab("requirements");
+    else setActiveSubTab("applications"); // handles "applications" or no param
+  }, [location.searchStr]);
 
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<VisaStatus | "All">("All");
@@ -1618,9 +1629,13 @@ function VisaPage() {
           {/* Page Header */}
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <h1 className="font-display text-3xl font-bold">Visa Management</h1>
+              <h1 className="font-display text-3xl font-bold">
+                {activeSubTab === "booking" ? "Visa Booking" : "Visa Applications"}
+              </h1>
               <p className="mt-1 text-sm text-muted-foreground">
-                Track applications, document checklists, and setup country-wise requirements.
+                {activeSubTab === "booking"
+                  ? "Manage and track all visa booking records."
+                  : "Track applications, document checklists, and country-wise requirements."}
               </p>
             </div>
             <div className="flex gap-2">
@@ -1635,7 +1650,7 @@ function VisaPage() {
               ) : (
                 <>
                   <Button variant="outline" className="shadow-sm rounded-xl" onClick={() => setIsExportOpen(true)}>
-                    <Download className="mr-2 h-4 w-4" /> Export
+                    <Download className="mr-2 h-4 w-4" /> Export Booking
                   </Button>
                   <Button
                     onClick={() => { setSelectedVisaBooking(null); setIsVisaBookingModalOpen(true); }}
@@ -1648,13 +1663,6 @@ function VisaPage() {
               )}
             </div>
           </div>
-
-          <Tabs value={activeSubTab} onValueChange={(val: any) => setActiveSubTab(val)} className="w-full mt-4 mb-2">
-            <TabsList className="grid w-full overflow-x-auto sm:overflow-visible flex-nowrap sm:w-auto grid-cols-2 bg-secondary/50 rounded-xl p-1 shadow-sm gap-1 min-w-max">
-              <TabsTrigger value="applications" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">Visa Applications</TabsTrigger>
-              <TabsTrigger value="booking" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">Visa Booking</TabsTrigger>
-            </TabsList>
-          </Tabs>
 
           {activeSubTab === "applications" ? (
             <>

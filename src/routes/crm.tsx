@@ -43,6 +43,8 @@ import {
   Wallet,
   Car,
   LifeBuoy,
+  Stamp,
+  BookOpen,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -87,7 +89,15 @@ const FULL_NAV: NavItem[] = [
   { to: "/crm/leads", label: "Leads", icon: Users },
   { to: "/crm/quotations", label: "Quotations", icon: FileText },
   { to: "/crm/tasks", label: "Tasks", icon: ListChecks },
-  { to: "/crm/visa", label: "Visa", icon: Plane },
+  {
+    to: "/crm/visa",
+    label: "Visa",
+    icon: Plane,
+    subItems: [
+      { label: "Visa Applications", to: "/crm/visa?tab=applications", icon: Stamp },
+      { label: "Visa Booking", to: "/crm/visa?tab=booking", icon: BookOpen },
+    ],
+  },
   { to: "/crm/customers", label: "Customers", icon: UserCheck },
   { to: "/crm/bookings", label: "Bookings", icon: CalendarCheck },
   {
@@ -291,7 +301,7 @@ function CrmLayout() {
     <div className="flex min-h-screen bg-secondary/30">
       {/* Sidebar */}
       <aside
-        className={`print:hidden sticky top-0 hidden h-screen ${isCompact ? "w-20" : "w-64"} shrink-0 flex-col border-r border-border bg-sidebar p-4 lg:flex transition-all duration-300`}
+        className={`print:hidden sticky top-0 hidden h-screen ${isCompact ? "w-[72px]" : "w-64"} shrink-0 flex-col border-r border-border bg-sidebar p-3 lg:flex transition-all duration-300`}
       >
         {isCompact ? (
           <TooltipProvider delayDuration={40}>
@@ -299,10 +309,10 @@ function CrmLayout() {
               <TooltipTrigger asChild>
                 <Link
                   to="/crm"
-                  className="mb-6 flex items-center justify-center cursor-pointer outline-none focus:outline-none focus:ring-0"
+                  className="mb-5 flex items-center justify-center cursor-pointer outline-none focus:outline-none focus:ring-0"
                 >
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 via-rose-600 to-amber-500 text-white shadow-md shadow-rose-500/25 hover:scale-105 active:scale-95 transition-all duration-200 border border-white/25 select-none">
-                    <span className="font-display font-black text-xs tracking-wider text-white drop-shadow-xs">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 via-rose-600 to-amber-500 text-white shadow-lg shadow-rose-500/30 hover:scale-105 active:scale-95 transition-all duration-200 border border-white/20 select-none">
+                    <span className="font-display font-black text-[11px] tracking-wider text-white drop-shadow-xs">
                       LMH
                     </span>
                   </div>
@@ -363,13 +373,18 @@ function CrmLayout() {
                   <HoverCard key={n.to} openDelay={80} closeDelay={150}>
                     <HoverCardTrigger asChild>
                       <button
-                        className={`group w-full flex items-center justify-between ${isCompact ? "justify-center p-3" : "gap-3 px-4 py-2.5"} rounded-full text-sm font-medium transition-all duration-300 ease-out hover:translate-x-1.5 cursor-pointer ${active || isSubActive
-                          ? "bg-primary/10 text-primary font-semibold"
-                          : "text-sidebar-foreground hover:bg-sidebar-accent"
+                        className={`group w-full flex items-center justify-between ${isCompact ? "justify-center p-2.5" : "gap-3 px-4 py-2.5"} rounded-xl text-sm font-medium transition-all duration-200 cursor-pointer relative ${active || isSubActive
+                          ? "bg-primary/15 text-primary shadow-sm shadow-primary/20"
+                          : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground"
                           }`}
                       >
-                        <div className="flex items-center gap-3">
-                          <Icon className={`${isCompact ? "h-6 w-6" : "h-5 w-5"} transition-transform duration-300 group-hover:scale-110`} />
+                        {isCompact && (active || isSubActive) && (
+                          <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-primary rounded-r-full" />
+                        )}
+                        <div className={`flex items-center gap-3 ${isCompact ? "justify-center" : ""}`}>
+                          <div className={`${isCompact ? "flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-200 " + (active || isSubActive ? "bg-primary/20 text-primary" : "text-muted-foreground group-hover:text-foreground") : ""}`}>
+                            <Icon className={`${isCompact ? "h-[18px] w-[18px]" : "h-5 w-5"} transition-transform duration-200 group-hover:scale-110`} />
+                          </div>
                           {!isCompact && n.label}
                         </div>
                         {!isCompact && <ChevronDown className="h-4 w-4 opacity-60 transition-transform duration-200 group-data-[state=open]:rotate-180 group-data-[state=open]:opacity-100" />}
@@ -411,12 +426,17 @@ function CrmLayout() {
                 <Link
                   key={n.to}
                   to={n.to}
-                  className={`group flex items-center ${isCompact ? "justify-center p-3" : "gap-3 px-4 py-2.5"} rounded-full text-sm font-medium transition-all duration-300 ease-out hover:translate-x-1.5 ${active
-                    ? "bg-primary/10 text-primary font-semibold"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent"
+                  className={`group relative flex items-center ${isCompact ? "justify-center p-2.5" : "gap-3 px-4 py-2.5"} rounded-xl text-sm font-medium transition-all duration-200 ${active
+                    ? "bg-primary/15 text-primary shadow-sm shadow-primary/20"
+                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground"
                     }`}
                 >
-                  <Icon className={`${isCompact ? "h-6 w-6" : "h-5 w-5"} transition-transform duration-300 group-hover:scale-110`} />
+                  {isCompact && active && (
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-primary rounded-r-full" />
+                  )}
+                  <div className={`${isCompact ? "flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-200 " + (active ? "bg-primary/20 text-primary" : "text-muted-foreground group-hover:text-foreground") : ""}`}>
+                    <Icon className={`${isCompact ? "h-[18px] w-[18px]" : "h-5 w-5"} transition-transform duration-200 group-hover:scale-110`} />
+                  </div>
                   {!isCompact && n.label}
                 </Link>
               );
@@ -448,9 +468,11 @@ function CrmLayout() {
               <TooltipTrigger asChild>
                 <button
                   onClick={handleLogout}
-                  className="group mt-4 flex items-center justify-center p-3 rounded-full text-sm font-medium bg-red-500/10 text-red-500 hover:bg-red-500/20 hover:text-red-400 dark:bg-red-500/15 dark:text-red-400 dark:hover:bg-red-500/25 dark:hover:text-red-300 transition-all duration-300 ease-out hover:translate-x-1.5 cursor-pointer"
+                  className="group mt-3 flex items-center justify-center p-2.5 rounded-xl text-sm font-medium bg-red-500/10 text-red-500 hover:bg-red-500/20 hover:text-red-400 transition-all duration-200 cursor-pointer"
                 >
-                  <LogOut className="h-6 w-6 transition-transform duration-300 group-hover:scale-110" />
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-500/10 group-hover:bg-red-500/20 transition-all duration-200">
+                    <LogOut className="h-[18px] w-[18px] transition-transform duration-200 group-hover:scale-110" />
+                  </div>
                 </button>
               </TooltipTrigger>
               <TooltipContent

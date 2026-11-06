@@ -929,42 +929,42 @@ function QuotationsPage() {
           ))}
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-4 animate-in fade-in duration-300">
-          <div className="flex flex-wrap items-center gap-2 ml-auto">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search quotations..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 h-9 w-[200px] md:w-[250px] rounded-lg shadow-sm"
-              />
-            </div>
-            <div className="flex items-center gap-2 bg-background border border-input rounded-lg px-3 h-9 shadow-sm">
-              <Filter className="h-4 w-4 text-muted-foreground" />
-              <select
-                value={agentFilter}
-                onChange={(e) => setAgentFilter(e.target.value)}
-                className="bg-transparent border-none text-sm focus:outline-none focus:ring-0 cursor-pointer text-foreground appearance-none pr-4"
-              >
-                <option value="All">All Agents</option>
-                {Array.from(new Set(quotations.map(q => q.agent_name).filter(Boolean))).map(agent => (
-                  <option key={agent} value={agent}>{agent}</option>
-                ))}
-              </select>
-            </div>
-            <Button variant="outline" size="sm" onClick={() => setIsExportOpen(true)} className="h-9 shadow-sm">
-              <Download className="mr-2 h-4 w-4" /> Export
-            </Button>
-          </div>
-        </div>
-
         <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="mb-4">
-            <TabsTrigger value="all">All Quotes</TabsTrigger>
-            <TabsTrigger value="hotel">Hotel Quotes</TabsTrigger>
-            <TabsTrigger value="package">Package Quotes</TabsTrigger>
-          </TabsList>
+          {/* Single-row toolbar: tabs left, controls right */}
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4 animate-in fade-in duration-300">
+            <TabsList>
+              <TabsTrigger value="all">All Quotes</TabsTrigger>
+              <TabsTrigger value="hotel">Hotel Quotes</TabsTrigger>
+              <TabsTrigger value="package">Package Quotes</TabsTrigger>
+            </TabsList>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search quotations..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 h-9 w-[200px] md:w-[250px] rounded-lg shadow-sm"
+                />
+              </div>
+              <div className="flex items-center gap-2 bg-background border border-input rounded-lg px-3 h-9 shadow-sm">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <select
+                  value={agentFilter}
+                  onChange={(e) => setAgentFilter(e.target.value)}
+                  className="bg-transparent border-none text-sm focus:outline-none focus:ring-0 cursor-pointer text-foreground appearance-none pr-4"
+                >
+                  <option value="All">All Agents</option>
+                  {Array.from(new Set(quotations.map(q => q.agent_name).filter(Boolean))).map(agent => (
+                    <option key={agent} value={agent}>{agent}</option>
+                  ))}
+                </select>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => setIsExportOpen(true)} className="h-9 shadow-sm">
+                <Download className="mr-2 h-4 w-4" /> Export
+              </Button>
+            </div>
+          </div>
 
           {["all", "hotel", "package"].map((tabValue) => (
             <TabsContent key={tabValue} value={tabValue} className="mt-0">

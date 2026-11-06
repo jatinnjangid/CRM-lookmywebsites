@@ -139,12 +139,12 @@ function GeneralInsurancePage() {
 
   const handleSavePolicy = async (updatedData: any) => {
     const validColumns = [
-      'id', 'school_name', 'reference_name', 'customer_name', 'mobile_number', 'alternate_mobile', 
-      'email', 'address', 'city', 'state', 'customer_id', 'company_id', 'vendor_id', 'policy_number', 
-      'issue_date', 'expiry_date', 'vehicle_number', 'vehicle_model', 'seating_capacity', 'chassis_number', 
-      'engine_number', 'fuel_type', 'registration_date', 'policy_type', 'idv_value', 'previous_policy_number', 
-      'previous_insurer', 'ncb_percentage', 'od_premium', 'tp_premium', 'net_premium', 'gst', 'total_premium', 
-      'customer_paid', 'vendor_paid', 'profit', 'payment_date', 'payment_mode', 'transaction_reference', 
+      'id', 'school_name', 'reference_name', 'customer_name', 'mobile_number', 'alternate_mobile',
+      'email', 'address', 'city', 'state', 'customer_id', 'company_id', 'vendor_id', 'policy_number',
+      'issue_date', 'expiry_date', 'vehicle_number', 'vehicle_model', 'seating_capacity', 'chassis_number',
+      'engine_number', 'fuel_type', 'registration_date', 'policy_type', 'idv_value', 'previous_policy_number',
+      'previous_insurer', 'ncb_percentage', 'od_premium', 'tp_premium', 'net_premium', 'gst', 'total_premium',
+      'customer_paid', 'vendor_paid', 'profit', 'payment_date', 'payment_mode', 'transaction_reference',
       'payment_status', 'notes', 'status', 'created_at', 'paid_by', 'amount_paid'
     ];
 
@@ -170,20 +170,20 @@ function GeneralInsurancePage() {
     if (updatedData.id) {
       const newPolicies = policies.map(p => p.id === updatedData.id ? updatedData : p);
       setPolicies(newPolicies);
-      
+
       const { id, ...rest } = dbPayload;
       await supabase.from("insurance_policies").update(rest).eq("id", id);
     } else {
       const newId = crypto.randomUUID();
       const newCreatedAt = new Date().toISOString();
-      
+
       const newPolicy = {
         ...updatedData,
         id: newId,
         created_at: newCreatedAt
       };
       setPolicies([newPolicy, ...policies]);
-      
+
       dbPayload.id = newId;
       dbPayload.created_at = newCreatedAt;
       await supabase.from("insurance_policies").insert([dbPayload]);
@@ -221,16 +221,16 @@ function GeneralInsurancePage() {
     }
 
     const headers = [
-      "Policy No", "Issue Date", "Expiry Date", "Client / Company", "School Name", "Reference Name", 
-      "Referred By", "Customer Name", "Mobile Number", "Alt. Mobile", "Email", "City", "State", "Address", 
-      "Additional Passenger Names", "Insurance Company", "Vendor", "Vehicle Number", "Vehicle Model", 
-      "Seating Capacity", "Registration Date", "Policy Type", "IDV Value", "Previous Policy No", 
-      "Previous Insurer", "NCB %", "OD Premium", "TP Premium", "Net Premium", "GST", "Total Premium", 
+      "Policy No", "Issue Date", "Expiry Date", "Client / Company", "School Name", "Reference Name",
+      "Referred By", "Customer Name", "Mobile Number", "Alt. Mobile", "Email", "City", "State", "Address",
+      "Additional Passenger Names", "Insurance Company", "Vendor", "Vehicle Number", "Vehicle Model",
+      "Seating Capacity", "Registration Date", "Policy Type", "IDV Value", "Previous Policy No",
+      "Previous Insurer", "NCB %", "OD Premium", "TP Premium", "Net Premium", "GST", "Total Premium",
       "Customer Paid Amounts", "Vendor Paid", "Calculated Profit", "Transaction Ref.", "Payment Status", "Remarks"
     ];
-    
+
     const csvRows = [headers.join(",")];
-    
+
     for (const p of filtered) {
       const row = [
         p.policy_number || "",
@@ -273,12 +273,12 @@ function GeneralInsurancePage() {
       ];
       csvRows.push(row.join(","));
     }
-    
+
     const csvContent = "data:text/csv;charset=utf-8," + csvRows.join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `insurance_export_${new Date().toISOString().slice(0,10)}.csv`);
+    link.setAttribute("download", `insurance_export_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -470,11 +470,11 @@ function GeneralInsurancePage() {
 
         {activeTab === "Vendors" && <InsuranceVendorsView />}
         {activeTab === "Companies" && <InsuranceCompaniesView />}
-        
+
         {activeTab === "CustomerStatus" && (
           <InsuranceCustomerStatusView policies={policies} setPolicies={setPolicies} />
         )}
-        
+
         {activeTab === "VendorStatus" && (
           <InsuranceVendorStatusView policies={policies} vendors={vendors} setPolicies={setPolicies} />
         )}
@@ -522,8 +522,8 @@ function GeneralInsurancePage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Start Date</Label>
-                <Input 
-                  type="date" 
+                <Input
+                  type="date"
                   className="rounded-xl"
                   value={exportStartDate}
                   onChange={(e) => setExportStartDate(e.target.value)}
@@ -531,8 +531,8 @@ function GeneralInsurancePage() {
               </div>
               <div className="space-y-2">
                 <Label>End Date</Label>
-                <Input 
-                  type="date" 
+                <Input
+                  type="date"
                   className="rounded-xl"
                   value={exportEndDate}
                   onChange={(e) => setExportEndDate(e.target.value)}
